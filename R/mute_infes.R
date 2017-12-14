@@ -6,7 +6,6 @@
 #' modelstatus variable with the name given in \code{name}. If \code{return_infes} is TRUE
 #' this function return the matrix with infeasible years instead of the data.#' 
 #' 
-#' 
 #' @param data MAgPIE object containing the results of a MAgPIE run and the modelstatus.
 #' @param name String providing the name of the variable that holds the modelstatus.
 #' @param return_infes Logical. If TRUE function return matrix with modelstatus instead of data.
