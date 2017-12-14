@@ -72,7 +72,8 @@ Magclass objects distinguish dimensions by dots in the variable names. Thus, we 
 
 ```{r, echo = TRUE}
 # Add dimension by replacing dashes with dots
-getNames(emudata,dim="scenario") <- gsub("-([0-9]{1,2}$)",".\\1",getNames(emudata,dim="scenario"))
+getNames(emudata,dim="scenario") <- 
+  gsub("-([0-9]{1,2}$)",".\\1",getNames(emudata,dim="scenario"))
 # Naming the dimensions
 getSets(emudata) <- c("region","year","scenario","sample","model","variable")
 ```

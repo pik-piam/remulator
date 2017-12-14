@@ -6,11 +6,11 @@
 #' @param name_x Name of the variable in \code{data} that will be treated as x in the fit
 #' @param name_y Name of the variable in \code{data} that will be treated as y in the fit
 #' @param name_modelstat Name of the variable that contains the modelstatus
-#' @param treat_as_infes GAMS model status codes that will be regarded infeasible. See \link{https://www.gams.com/24.8/docs/userguides/mccarl/modelstat_tmodstat.htm}
+#' @param treat_as_infes GAMS model status codes that will be regarded infeasible. See \url{https://www.gams.com/24.8/docs/userguides/mccarl/modelstat_tmodstat.htm}
 #' @param output_path Path to save the output to
 #' @param ... Arguments passed on to the \code{optim} function in \code{calcualte_fit}. Useful to define bounds on fit coefficients.
 #' @author David Klein
-#' @importFrom magclass getSets getNames add_dimension collapseNames
+#' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames
 #' @export
 
 emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_path,...) {

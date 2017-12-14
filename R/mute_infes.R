@@ -4,7 +4,7 @@
 #' year to NA because results after an infeasible year are not meaningful. The modelstatus
 #' has to be provided as one of the variables in the data. This function will look for the
 #' modelstatus variable with the name given in \code{name}. If \code{return_infes} is TRUE
-#' this function return the matrix with infeasible years instead of the data.#' 
+#' this function return the matrix with infeasible years instead of the data. 
 #' 
 #' @param data MAgPIE object containing the results of a MAgPIE run and the modelstatus.
 #' @param name String providing the name of the variable that holds the modelstatus.

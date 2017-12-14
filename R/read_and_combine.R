@@ -20,6 +20,7 @@ read_and_combine <- function(list_of_directories, outfile=NULL) {
   for (f in list_of_directories) {
     # extract scenario name from path: any string between "/" and EOL ($) containing "-x" with x being a one or two digit number
     #scenario <- gsub(".*\\/(.*-[0-9]{1,2}$)","\\1",f)
+    cfg <- NULL
     load(paste0(f,"/config.Rdata"))
     scenario <- cfg$title
     report <- read.report(paste0(f,"/report_",scenario,".mif"),as.list=FALSE)

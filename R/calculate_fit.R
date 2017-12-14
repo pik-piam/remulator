@@ -9,7 +9,7 @@
 #' @return MAgPIE object with fit coefficients a, b, and d
 #' @author David Klein
 #' @importFrom stats optim 
-#' @importFrom magclass unwrap as.magpie getSets
+#' @importFrom magclass unwrap as.magpie getSets<-
 
 calculate_fit <- function(data,...) {
   

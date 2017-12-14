@@ -8,7 +8,7 @@
 #' @return MAgPIE object containing the points on the curve.
 #' @author David Klein
 #' @seealso \code{\link{calculate_fit}} \code{\link{plot_curve}}
-#' @importFrom magclass unwrap as.magpie getSets setNames collapseNames add_dimension mbind
+#' @importFrom magclass unwrap as.magpie getSets setNames collapseNames add_dimension mbind getSets<-
 
 calc_supplycurve <- function(data,fitcoef) {
   
