@@ -7,6 +7,7 @@
 #' @param supplycurve MAgPIE object containing the points of the curve (output of \code{\link{calc_supplycurve}})
 #' @param infes MAgPIE object containing the modelstatus (optional output of \code{\link{mute_infes}})
 #' @param emu_path Name of the folder the figures and pdf will be saved to.
+#' @param create_pdf Logical indicating whether a pdf should be produced that compiles all figures.
 #' @author David Klein
 #' @seealso \code{\link{calc_supplycurve}} \code{\link{mute_infes}}
 #' @importFrom magclass getNames getYears
@@ -16,7 +17,7 @@
 #' @importFrom grDevices colorRampPalette
 #' @importFrom stats na.omit
 
-plot_curve <- function(raw, supplycurve, infes, emu_path="emulator") {
+plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=TRUE) {
 
   ifelse(!dir.exists(emu_path), dir.create(emu_path), FALSE)
   
@@ -25,27 +26,30 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator") {
     ifelse(!dir.exists(path_plots), dir.create(path_plots), FALSE)
     outfile <- file.path(emu_path,paste0(scen,"_emulator.pdf"))
     
-    template <-  c("\\documentclass[a4paper, portrait ]{article}",
-                   "\\setlength{\\parindent}{0in}",
-                   "\\usepackage{float}",
-                   "\\usepackage[bookmarksopenlevel=section]{hyperref}",
-                   "\\hypersetup{bookmarks=true,pdfauthor={PIK}}",
-                   "\\usepackage{graphicx}",
-                   "\\usepackage{rotating}",
-                   "\\usepackage[strings]{underscore}",
-                   "\\usepackage[margin=2cm]{geometry}",
-                   "\\usepackage{fancyhdr}",
-                   "\\pagestyle{fancy}",
-                   "\\begin{document}",
-                   "<<echo=false>>=",
-                   "options(width=90)",
-                   "@") 
-    sw <- swopen(outfile = outfile, template = template)
-    swlatex(sw,c(paste0("\\title{MAgPIE emulator for ",scen,"}"),'\\author{Zentrum f\\"ur politische Sch\\"onheit}',"\\maketitle","\\tableofcontents"))
+    if(create_pdf) {
+      template <-  c("\\documentclass[a4paper, portrait ]{article}",
+                     "\\setlength{\\parindent}{0in}",
+                     "\\usepackage{float}",
+                     "\\usepackage[bookmarksopenlevel=section]{hyperref}",
+                     "\\hypersetup{bookmarks=true,pdfauthor={PIK}}",
+                     "\\usepackage{graphicx}",
+                     "\\usepackage{rotating}",
+                     "\\usepackage[strings]{underscore}",
+                     "\\usepackage[margin=2cm]{geometry}",
+                     "\\usepackage{fancyhdr}",
+                     "\\pagestyle{fancy}",
+                     "\\begin{document}",
+                     "<<echo=false>>=",
+                     "options(width=90)",
+                     "@") 
+      sw <- swopen(outfile = outfile, template = template)
+      swlatex(sw,c(paste0("\\title{MAgPIE emulator for ",scen,"}"),'\\author{Zentrum f\\"ur politische Sch\\"onheit}',"\\maketitle","\\tableofcontents"))
+      
+      #==== P L O T: infeasible years ====
+      
+      swlatex(sw,"\\section{Modelstat}")
+    }
     
-    #==== P L O T: infeasible years ====
-    
-    swlatex(sw,"\\section{Modelstat}")
     # heatmap(i, Colv = NA, Rowv = NA,col=c("#df2424", "#4cce0f"))
     dat <- as.ggplot(infes[,,scen])
     dat$Value[is.na(dat$Value)] <- 0 # for nicer plot replace NA with 0
@@ -53,28 +57,27 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator") {
       scale_fill_gradient(low = "#df2424", high = "#4cce0f") + xlab("Scenario") + ggtitle(scen) + 
       scale_x_discrete(expand = c(0, 0)) + scale_y_discrete(expand = c(0,0)) + theme_bw(base_size = 6)
     ggsave(filename = file.path(path_plots,paste0("modelstat-",scen,".png")),plot=modelstat,width=6,height=3)
-    swfigure(sw,print,modelstat)
+    if (create_pdf) swfigure(sw,print,modelstat)
     
     #==== P L O T: raw data ====
     
-    swlatex(sw,"\\section{Raw data}")
+    if (create_pdf) swlatex(sw,"\\section{Raw data of feasible runs}")
     dat <- na.omit(gginput(raw[,,]["GLO",,"modelstat",invert=TRUE],scatter = "variable"))
     scatter_raw <- ggplot(dat, aes_string(x=".value.x",y=".value.y",color="scenario")) + geom_point(size=0.3) +
-      facet_grid(.temp1~.spat1 ,scales = "fixed") + labs(title = "Raw data of feasible runs", y ="$/GJ", x = "EJ") +
-      theme_minimal(base_size = 6) # + ylim(0, 50)
+      theme_minimal(base_size = 6) + facet_grid(.temp1~.spat1 ,scales = "fixed") + labs(y ="$/GJ", x = "EJ")
     ggsave(filename = file.path(path_plots,paste0("scatter-raw-all.png")),plot=scatter_raw,width=10,height=6)
-    swfigure(sw,print,scatter_raw,fig.width=1)
+    if (create_pdf) swfigure(sw,print,scatter_raw,fig.width=1)
     
     #==== Overviewplot Supplycurves 1/2 ====
     
-    swlatex(sw,"\\section{Supplycurve matrix}")
+    if (create_pdf) swlatex(sw,"\\section{Supplycurve matrix}")
     dat <- gginput(supplycurve[,,scen], scatter = "type")
     p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) +
-      geom_point(data=gginput(raw["GLO",,"modelstat",invert=TRUE][,,scen],scatter = "variable"),aes_string(x=".value.x",y=".value.y"),size=1) +
-      geom_line(aes_string(colour="scenario")) + labs(y ="$/GJ", x = "EJ") + 
-      theme_grey(base_size = 6) + facet_grid(.temp1~.spat1 ,scales = "fixed")
+      geom_point(data=gginput(raw["GLO",,"modelstat",invert=TRUE][,,scen],scatter = "variable"),aes_string(x=".value.x",y=".value.y"),size=0.3) +
+      geom_line(aes_string(colour="scenario")) + 
+      theme_minimal(base_size = 6) + facet_grid(.temp1~.spat1 ,scales = "fixed") + labs(y ="$/GJ", x = "EJ")
     ggsave(filename = file.path(path_plots,paste0("scatter-fit-",scen,".png")),plot=p,width=10,height=6)
-    swfigure(sw,print,p,fig.width=1)
+    if (create_pdf) swfigure(sw,print,p,fig.width=1)
     
     #==== Overviewplot Supplycurves 2/2 ====
     
@@ -82,7 +85,7 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator") {
     color_years <- colorRampPalette(c("blue", "yellow", "red"))(length(getYears(raw)))
     names(color_years) <- gsub("y","",getYears(raw))
     
-    swlatex(sw,"\\section{Supplycurve all years}")
+    if (create_pdf) swlatex(sw,"\\section{Supplycurve all years}")
     dat <- gginput(supplycurve[,,scen], scatter = "type")
     dat$year <- as.character(dat$year)
     dat_scatter <- gginput(raw["GLO",,"modelstat",invert=TRUE][,,scen],scatter = "variable")
@@ -92,26 +95,28 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator") {
       geom_line(aes_string(colour="year")) + facet_wrap(~.spat1 ,scales = "free") + theme_gray(base_size = 6) +
       scale_colour_manual(values=color_years) + labs(title = scen, y ="$/GJ", x = "EJ")
     ggsave(filename = file.path(path_plots,paste0("scatter-fit-allyears-",scen,".png")),plot=p,width=10,height=6)
-    swfigure(sw,print,p,fig.width=1)
+    if (create_pdf) swfigure(sw,print,p,fig.width=1)
     
     #==== Supplycurves for each year ====
     
-    swlatex(sw,"\\section{Supplycurve per year}")
+    if (create_pdf) swlatex(sw,"\\section{Supplycurve per year}")
     for(y in getYears(supplycurve)){
-      swlatex(sw,paste0("\\subsection{",y,"}"))
+      if (create_pdf) swlatex(sw,paste0("\\subsection{",y,"}"))
       dat <- gginput(supplycurve[,y,scen], scatter = "type")
       p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.spat1 ,scales = "fixed") +
         geom_point(data=gginput(raw["GLO",,"modelstat",invert=TRUE][,y,scen],scatter = "variable"),aes_string(x=".value.x",y=".value.y"),size=1,color="gray") +
         theme_grey(base_size = 6) + labs(y ="$/GJ", x = "EJ")
       ggsave(filename = file.path(path_plots,paste0("scatter-fit-",scen,"-",y,".png")),plot=p,width=10,height=6)
-      swfigure(sw,print,p,fig.width=1)
+      if (create_pdf) swfigure(sw,print,p,fig.width=1)
     }
     
-    # delete temporary files created by knitr
-    swclose(sw)
-    unlink(c(paste0(emu_path,"/figure"),
-             paste0(emu_path,"/",scen,"_emulator.log"),
-             paste0(emu_path,"/",scen,"_emulator.rda")),recursive=TRUE, force=TRUE)
+    if (create_pdf) {
+      # delete temporary files created by knitr
+      swclose(sw)
+      unlink(c(paste0(emu_path,"/figure"),
+               paste0(emu_path,"/",scen,"_emulator.log"),
+               paste0(emu_path,"/",scen,"_emulator.rda")),recursive=TRUE, force=TRUE)
+    }
     
   } # end scenario loop  
 }

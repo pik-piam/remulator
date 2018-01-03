@@ -8,13 +8,21 @@
 #' @param name_modelstat Name of the variable that contains the modelstatus
 #' @param treat_as_infes GAMS model status codes that will be regarded infeasible. See \url{https://www.gams.com/24.8/docs/userguides/mccarl/modelstat_tmodstat.htm}
 #' @param output_path Path to save the output to
+#' @param create_pdf Logical indicating whether a pdf should be produced that compiles all figures.
 #' @param ... Arguments passed on to the \code{optim} function in \code{calcualte_fit}. Useful to define bounds on fit coefficients.
+#' @return MAgPIE object containning fit coefficients
 #' @author David Klein
 #' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames
 #' @export
 
-emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_path,...) {
+emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_path,create_pdf=TRUE,...) {
   
+  # name_x="Primary Energy|Biomass|Energy Crops (EJ/yr)"
+  # name_y="Price|Primary Energy|Biomass (US$2005/GJ)"
+  # name_modelstat="Modelstatus (-)"
+  # treat_as_infes = c(5,7)
+  # output_path = "single_case"
+  # lower=c(0,0,1)
   ########################################################################################################
   ################################ C A L C U L A T E   E M U L A T O R ###################################
   ########################################################################################################
@@ -71,13 +79,16 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_p
   infes <- mute_infes(data = data, name="modelstat", infeasible = treat_as_infes, return_infes = TRUE)
   
   # calculate fit coefficients
-  fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],...)
-  
+  myfun <- function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])
+  fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =myfun,initial_values = c(0,0,1),...)
+
   # calculate supplycurve for plotting
-  supplycurve <- calc_supplycurve(data,fitcoef)
+  supplycurve <- calc_supplycurve(data,fitcoef,myform=myfun)
   
   # plot supplycurves to single png files and to pdf
-  plot_curve(data,supplycurve,infes,output_path)
+  plot_curve(data,supplycurve,infes,output_path,create_pdf)
+  
+  return(fitcoef)
   
 }
 
