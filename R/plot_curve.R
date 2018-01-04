@@ -16,6 +16,8 @@
 #' @importFrom lusweave swopen swclose swfigure swlatex
 #' @importFrom grDevices colorRampPalette
 #' @importFrom stats na.omit
+#' @importFrom tidyr spread
+#' @importFrom dplyr filter %>% group_by summarize ungroup
 
 plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=TRUE) {
 
@@ -99,17 +101,42 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=
     
     #==== Supplycurves for each year ====
     
-    if (create_pdf) swlatex(sw,"\\section{Supplycurve per year}")
-    for(y in getYears(supplycurve)){
-      if (create_pdf) swlatex(sw,paste0("\\subsection{",y,"}"))
-      dat <- gginput(supplycurve[,y,scen], scatter = "type")
-      p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.spat1 ,scales = "fixed") +
-        geom_point(data=gginput(raw["GLO",,"modelstat",invert=TRUE][,y,scen],scatter = "variable"),aes_string(x=".value.x",y=".value.y"),size=1,color="gray") +
-        theme_grey(base_size = 6) + labs(y ="$/GJ", x = "EJ")
-      ggsave(filename = file.path(path_plots,paste0("scatter-fit-",scen,"-",y,".png")),plot=p,width=10,height=6)
+    # if (create_pdf) swlatex(sw,"\\section{Supplycurve per year}")
+    # for(y in getYears(supplycurve)){
+    #   if (create_pdf) swlatex(sw,paste0("\\subsection{",y,"}"))
+    #   dat <- gginput(supplycurve[,y,scen], scatter = "type")
+    #   p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.spat1 ,scales = "fixed") +
+    #     geom_point(data=gginput(raw["GLO",,"modelstat",invert=TRUE][,y,scen],scatter = "variable"),aes_string(x=".value.x",y=".value.y"),size=1,color="gray") +
+    #     theme_grey(base_size = 6) + labs(title = y, y ="$/GJ", x = "EJ")
+    #   ggsave(filename = file.path(path_plots,paste0("scatter-fit-",scen,"-",y,".png")),plot=p,width=10,height=6)
+    #   if (create_pdf) swfigure(sw,print,p,fig.width=1)
+    # }
+    
+    #==== Supplycurves for each region ====
+    
+    if (create_pdf) swlatex(sw,"\\section{Supplycurve per region}")
+    for(r in getRegions(supplycurve)){
+      if (create_pdf) swlatex(sw,paste0("\\subsection{",r,"}"))
+      dat <- gginput(supplycurve[r,,scen], scatter = "type")
+      dat_raw <- gginput(raw["GLO",,"modelstat",invert=TRUE][r,,scen],scatter = "variable")
+      
+      # Remove values from supplycurve that are greater than the underlying raw data
+      # 1. find maximum x value of raw data for each region, year, and scenario
+      lim <-dat_raw %>% 
+        group_by(region,scenario,year) %>% 
+        summarize(maxi = max(.value.x,na.rm=TRUE)) %>%
+        ungroup()
+      
+      # 2. Add maxi column to dat and keep values only that are below max
+      dat <- inner_join(dat,lim,by=c("region"="region","scenario"="scenario","year"="year")) %>% filter(.value.x < maxi)
+
+      p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.temp1 ,scales = "free_x") +
+        geom_point(data=dat_raw,aes_string(x=".value.x",y=".value.y"),size=1,color="gray") +
+        theme_grey(base_size = 6) + labs(title = r, y ="$/GJ", x = "EJ")
+      ggsave(filename = file.path(path_plots,paste0("scatter-fit-",scen,"-",r,".png")),plot=p,width=10,height=6)
       if (create_pdf) swfigure(sw,print,p,fig.width=1)
     }
-    
+
     if (create_pdf) {
       # delete temporary files created by knitr
       swclose(sw)

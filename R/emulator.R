@@ -80,12 +80,15 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_p
   
   # calculate fit coefficients
   myfun <- function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])
+  cat("Calculating fit.\n")
   fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =myfun,initial_values = c(0,0,1),...)
 
   # calculate supplycurve for plotting
+  cat("Calculating supplycurve.\n")
   supplycurve <- calc_supplycurve(data,fitcoef,myform=myfun)
   
   # plot supplycurves to single png files and to pdf
+  cat("Plotting supplycurve.\n")
   plot_curve(data,supplycurve,infes,output_path,create_pdf)
   
   return(fitcoef)
