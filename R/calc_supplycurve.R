@@ -62,25 +62,15 @@ calc_supplycurve <- function(data,fitcoef,myform) {
   prod_max_glo_real <- prod_max_bisec + NA # create empty object of the shape of prod_max_bisec (with regions and years)
   prod_max_glo_real[,,] <- collapseNames(max_glo[,,"x"],collapsedim = "variable") # fill all regions and years with global maximum which has only GLO and no year
 
-  # # Old method of inverting supply curve: only works if functional form is known (mathematically )
-  # # calculate the demand that results to this maximal price for each region and year (invert supply curve)
-  # prod_max_inverted <- ((max_glo[,,"y"] - fitcoef[,,"a"]) / fitcoef[,,"b"])^(1/fitcoef[,,"c"])
-  # prod_max_inverted <- collapseNames(prod_max_inverted,collapsedim = c(2,3,4,5)) # keep the scenario even if it's only one
-  # getSets(prod_max_inverted) <- c("region","year","scenario")
-  # # find global maximum of all production
-  # prod_max_glo_real <- prod_max_inverted + NA # create empty object of the shape of prod_max_inverted (with regions and years)
-  # prod_max_glo_real[,,] <- collapseNames(max_glo[,,"x"],collapsedim = "variable") # fill all regions and years with global maximum which has only GLO and no year
-  
   # take minimum of maximal real production and maximal inverted production 
   # (so that flat supplycurves are not expanded to the inverted maximum which would prolong the x-axis)
   prod_max <- pmin(prod_max_bisec,prod_max_glo_real)
 
   ###### As basis for supplycurve: create demand points between 0 and maximal demand sample 
-  # First, create a magpie object with 41 steps between 0 and 2 in the third dimension.
+  # First, create a magpie object with n steps between 0 and 1 in the third dimension.
   # The third dimension is named x01 ... x41
   # The resulting magpie object has the dimensions ["GLO",NULL,x01...x41]
   scale <- setNames(as.magpie(seq(0,1.0,length.out = 1501)),gsub(" ","0",paste0("s",format(1:1501))))
-  
   # Then multiply with max demand
   dem <- prod_max * scale
   
@@ -88,7 +78,7 @@ calc_supplycurve <- function(data,fitcoef,myform) {
   # Why use [[]] syntax in the user defined function and why making a list out of fit coefficients?
   # To make the user defined function applicable for two different cases: for a scalar multiplication (in 'calculate_fit')
   # and for a magpie object multiplication in this function
-  # The user defined function is unsed at two places:
+  # The user defined function is used at two places:
   # 1. in calculate_fit, where there variable 'param' is a vector, i.e. each element contains a single number (fit coefficient). There is no 
   #    region or year dimension because it is called via apply
   # 2. here, where each element of 'param' contains a full magpie object with regions, years, and scenario so that it can be 
