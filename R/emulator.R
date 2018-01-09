@@ -17,17 +17,11 @@
 
 emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_path,create_pdf=TRUE,...) {
   
-  # name_x="Primary Energy|Biomass|Energy Crops (EJ/yr)"
-  # name_y="Price|Primary Energy|Biomass (US$2005/GJ)"
-  # name_modelstat="Modelstatus (-)"
-  # treat_as_infes = c(5,7)
-  # output_path = "single_case"
-  # lower=c(0,0,1)
-  ########################################################################################################
-  ################################ C A L C U L A T E   E M U L A T O R ###################################
-  ########################################################################################################
+  ########################################################
+  ################ prepare data ##########################
+  ########################################################
 
-  # if data contains "sample" dimension (n samples for each scenario) -> ok
+    # if data contains "sample" dimension (n samples for each scenario) -> ok
   # if data does not contain "sample" dimension -> all n scenarios will be lumped together to one scenario with n samples 
   # (with n being the number of previous scenarios)
   
@@ -72,6 +66,10 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_p
     data <- collapseNames(data,collapsedim = "model")
   }
   
+  ########################################################
+  ################ calculate emulator ####################
+  ########################################################
+  
   # set data to NA in infeasible years and the years after
   data <- mute_infes(data = data, name="modelstat", infeasible = treat_as_infes)
   
@@ -96,6 +94,4 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_p
   plot_curve(data,supplycurve,infes,output_path,create_pdf)
   
   return(fitcoef)
-  
 }
-

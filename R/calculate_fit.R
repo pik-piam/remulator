@@ -76,19 +76,6 @@ calculate_fit <- function(data,initial_values=c(1,1,1), form,...) {
   # fit supplycurves for all regions (1), all years (2), and all scenarios (3)
   tmp <- apply(a,c(1,2,3),minimize_least_squares,initial_values,form,...)
   
-  ## Alternative approach: for-loops instead of apply
-  ## tmp <- array(data=NA, dim=c(dim(a)[1:3],3), dimnames=c(dimnames(a)[1:3],list(coeff=letters[1:3])))
-  # tmp <- array(data=NA, dim=dim(a)[1:3], dimnames=dimnames(a)[1:3])
-  # for (r in dimnames(a)$region) {
-  #   for (y in dimnames(a)$year) {
-  #     for (s in dimnames(a)$scenario) {
-  #       cat("\n",r," ",y," ",s," ")
-  #       #tmp[r,y,s] <-
-  #       minimize_least_squares(a[r,y,s,,],initial_values = initial_values,userform = form,...)
-  #     }
-  #   }
-  # }
-  
   # helper function to extract coefficients and messages from tmp into different variables
   pick <- function(x,i)return(x[[1]][[i]])
   
