@@ -79,7 +79,7 @@ calc_supplycurve <- function(data,fitcoef,myform) {
   # First, create a magpie object with 41 steps between 0 and 2 in the third dimension.
   # The third dimension is named x01 ... x41
   # The resulting magpie object has the dimensions ["GLO",NULL,x01...x41]
-  scale <- setNames(as.magpie(seq(0,1.0,length.out = 501)),gsub(" ","0",paste0("s",format(1:501))))
+  scale <- setNames(as.magpie(seq(0,1.0,length.out = 1501)),gsub(" ","0",paste0("s",format(1:1501))))
   
   # Then multiply with max demand
   dem <- prod_max * scale

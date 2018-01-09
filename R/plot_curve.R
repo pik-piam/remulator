@@ -17,7 +17,7 @@
 #' @importFrom grDevices colorRampPalette
 #' @importFrom stats na.omit
 #' @importFrom tidyr spread
-#' @importFrom dplyr filter %>% group_by summarize ungroup
+#' @importFrom dplyr filter %>% group_by summarize ungroup inner_join
 
 plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=TRUE) {
 
@@ -57,7 +57,7 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=
     dat$Value[is.na(dat$Value)] <- 0 # for nicer plot replace NA with 0
     modelstat <- ggplot(dat,aes_string(x = "Data2", y="Year"))  + geom_tile(aes_string(fill = "Value"), colour = "white") + 
       scale_fill_gradient(low = "#df2424", high = "#4cce0f") + xlab("Scenario") + ggtitle(scen) + 
-      scale_x_discrete(expand = c(0, 0)) + scale_y_discrete(expand = c(0,0)) + theme_bw(base_size = 6)
+      scale_x_discrete(expand = c(0, 0)) + scale_y_discrete(expand = c(0,0)) + theme_bw(base_size = 6) + theme(legend.position="none")
     ggsave(filename = file.path(path_plots,paste0("modelstat-",scen,".png")),plot=modelstat,width=6,height=3)
     if (create_pdf) swfigure(sw,print,modelstat)
     
@@ -66,7 +66,7 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=
     if (create_pdf) swlatex(sw,"\\section{Raw data of feasible runs}")
     dat <- na.omit(gginput(raw[,,]["GLO",,"modelstat",invert=TRUE],scatter = "variable"))
     scatter_raw <- ggplot(dat, aes_string(x=".value.x",y=".value.y",color="scenario")) + geom_point(size=0.3) +
-      theme_minimal(base_size = 6) + facet_grid(.temp1~.spat1 ,scales = "fixed") + labs(y ="$/GJ", x = "EJ")
+      theme_minimal(base_size = 6) + facet_grid(.temp1~.spat1 ,scales = "fixed") + labs(y ="$/GJ", x = "EJ") + theme(legend.position="none")
     ggsave(filename = file.path(path_plots,paste0("scatter-raw-all.png")),plot=scatter_raw,width=10,height=6)
     if (create_pdf) swfigure(sw,print,scatter_raw,fig.width=1)
     
@@ -77,7 +77,7 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=
     p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) +
       geom_point(data=gginput(raw["GLO",,"modelstat",invert=TRUE][,,scen],scatter = "variable"),aes_string(x=".value.x",y=".value.y"),size=0.3) +
       geom_line(aes_string(colour="scenario")) + 
-      theme_minimal(base_size = 6) + facet_grid(.temp1~.spat1 ,scales = "fixed") + labs(y ="$/GJ", x = "EJ")
+      theme_minimal(base_size = 6) + facet_grid(.temp1~.spat1 ,scales = "fixed") + labs(y ="$/GJ", x = "EJ") + theme(legend.position="none")
     ggsave(filename = file.path(path_plots,paste0("scatter-fit-",scen,".png")),plot=p,width=10,height=6)
     if (create_pdf) swfigure(sw,print,p,fig.width=1)
     
@@ -99,18 +99,26 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=
     ggsave(filename = file.path(path_plots,paste0("scatter-fit-allyears-",scen,".png")),plot=p,width=10,height=6)
     if (create_pdf) swfigure(sw,print,p,fig.width=1)
     
+    # the same but with fixed scales
+    p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + 
+      geom_point(data=dat_scatter,aes_string(x=".value.x",y=".value.y",color="year"),size=1) +
+      geom_line(aes_string(colour="year")) + facet_wrap(~.spat1 ,scales = "fixed") + theme_gray(base_size = 6) +
+      scale_colour_manual(values=color_years) + labs(title = scen, y ="$/GJ", x = "EJ")
+    ggsave(filename = file.path(path_plots,paste0("scatter-fit-allyears-fixed-",scen,".png")),plot=p,width=10,height=6)
+    if (create_pdf) swfigure(sw,print,p,fig.width=1)
+
     #==== Supplycurves for each year ====
     
-    # if (create_pdf) swlatex(sw,"\\section{Supplycurve per year}")
-    # for(y in getYears(supplycurve)){
-    #   if (create_pdf) swlatex(sw,paste0("\\subsection{",y,"}"))
-    #   dat <- gginput(supplycurve[,y,scen], scatter = "type")
-    #   p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.spat1 ,scales = "fixed") +
-    #     geom_point(data=gginput(raw["GLO",,"modelstat",invert=TRUE][,y,scen],scatter = "variable"),aes_string(x=".value.x",y=".value.y"),size=1,color="gray") +
-    #     theme_grey(base_size = 6) + labs(title = y, y ="$/GJ", x = "EJ")
-    #   ggsave(filename = file.path(path_plots,paste0("scatter-fit-",scen,"-",y,".png")),plot=p,width=10,height=6)
-    #   if (create_pdf) swfigure(sw,print,p,fig.width=1)
-    # }
+    if (create_pdf) swlatex(sw,"\\section{Supplycurve per year}")
+    for(y in getYears(supplycurve)){
+      if (create_pdf) swlatex(sw,paste0("\\subsection{",y,"}"))
+      dat <- gginput(supplycurve[,y,scen], scatter = "type")
+      p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.spat1 ,scales = "fixed") +
+        geom_point(data=gginput(raw["GLO",,"modelstat",invert=TRUE][,y,scen],scatter = "variable"),aes_string(x=".value.x",y=".value.y"),size=1,color="gray") +
+        theme_grey(base_size = 6) + labs(title = y, y ="$/GJ", x = "EJ") + theme(legend.position="none")
+      ggsave(filename = file.path(path_plots,paste0("scatter-fit-",scen,"-",y,".png")),plot=p,width=10,height=6)
+      if (create_pdf) swfigure(sw,print,p,fig.width=1)
+    }
     
     #==== Supplycurves for each region ====
     
@@ -128,11 +136,12 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=
         ungroup()
       
       # 2. Add maxi column to dat and keep values only that are below max
-      dat <- inner_join(dat,lim,by=c("region"="region","scenario"="scenario","year"="year")) %>% filter(.value.x < maxi)
+      dat <- inner_join(dat,lim,by=c("region"="region","scenario"="scenario","year"="year")) %>% 
+        filter(.value.x < maxi)
 
-      p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.temp1 ,scales = "free_x") +
+      p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.temp1 ,scales = "free") +
         geom_point(data=dat_raw,aes_string(x=".value.x",y=".value.y"),size=1,color="gray") +
-        theme_grey(base_size = 6) + labs(title = r, y ="$/GJ", x = "EJ")
+        theme_grey(base_size = 6) + labs(title = r, y ="$/GJ", x = "EJ") + theme(legend.position="none")
       ggsave(filename = file.path(path_plots,paste0("scatter-fit-",scen,"-",r,".png")),plot=p,width=10,height=6)
       if (create_pdf) swfigure(sw,print,p,fig.width=1)
     }

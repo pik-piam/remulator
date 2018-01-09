@@ -82,6 +82,10 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_p
   myfun <- function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])
   cat("Calculating fit.\n")
   fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =myfun,initial_values = c(0,0,1),...)
+  
+  # fill missing years
+  cat("Fill missing years.\n")
+  fitcoef <- fill_missing_years(fitcoef)
 
   # calculate supplycurve for plotting
   cat("Calculating supplycurve.\n")
