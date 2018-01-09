@@ -7,6 +7,8 @@
 #' @param name_y Name of the variable in \code{data} that will be treated as y in the fit
 #' @param name_modelstat Name of the variable that contains the modelstatus
 #' @param treat_as_infes GAMS model status codes that will be regarded infeasible. See \url{https://www.gams.com/24.8/docs/userguides/mccarl/modelstat_tmodstat.htm}
+#' @param userfun Function to fit. User can provide a functional form using the following syntax: \code{function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])}. 
+#' This is function is also the default.
 #' @param output_path Path to save the output to
 #' @param create_pdf Logical indicating whether a pdf should be produced that compiles all figures.
 #' @param ... Arguments passed on to the \code{optim} function in \code{calcualte_fit}. Useful to define bounds on fit coefficients.
@@ -15,7 +17,7 @@
 #' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames
 #' @export
 
-emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_path,create_pdf=TRUE,...) {
+emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),output_path,create_pdf=TRUE,...) {
   
   ########################################################
   ################ prepare data ##########################
@@ -77,9 +79,8 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_p
   infes <- mute_infes(data = data, name="modelstat", infeasible = treat_as_infes, return_infes = TRUE)
   
   # calculate fit coefficients
-  myfun <- function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])
   cat("Calculating fit.\n")
-  fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =myfun,initial_values = c(0,0,1),...)
+  fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =userfun,initial_values = c(0,0,1),...)
   
   # fill missing years
   cat("Fill missing years.\n")
@@ -87,7 +88,7 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,output_p
 
   # calculate supplycurve for plotting
   cat("Calculating supplycurve.\n")
-  supplycurve <- calc_supplycurve(data,fitcoef,myform=myfun)
+  supplycurve <- calc_supplycurve(data,fitcoef,myform=userfun)
   
   # plot supplycurves to single png files and to pdf
   cat("Plotting supplycurve.\n")
