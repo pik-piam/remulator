@@ -13,6 +13,30 @@ bisect <- function(param, myform, approx_this, lower,upper, eps) {
 
   # actual bisection function 
   .bisect <- function (param, myform, approx_this, lower,upper, eps) {
+
+    # swap lower and upper if function is decreasing (otherwise bisection does not work)
+    fl <- myform(param,lower)
+    fu <- myform(param,upper)
+    
+    if (any(is.na(c(fl,fu)))) {
+      # if no function value could be calculated (probably because one of the coefficients is NA)
+      return(NA)
+    } else if ( fl == fu) {
+      # if function is flat
+      return(Inf)
+    } else  if ( fl < fu) {
+      # if approx_this is beyond range return upper limit
+      if (fu < approx_this) return(upper)
+      # if function is increasing call .bisect normally
+    } else {
+      # if approx_this is below range return lower limit
+      if (fl > approx_this) return(lower)
+      # if function is decreasing swap lower and upper
+      temp <- lower
+      lower <- upper
+      upper <- temp
+    }
+    
     middle <- (lower+upper)/2
     delta <- approx_this - myform(param,middle)
     #print(c(middle,delta))
@@ -26,37 +50,16 @@ bisect <- function(param, myform, approx_this, lower,upper, eps) {
     return(res)
   }
   
-  # swap lower and upper if function is decreasing (otherwise bisection does not work)
-  fa <- myform(param,lower)
-  fb <- myform(param,upper)
-  
-  if ( fa == fb) {
-    # if function is flat
-    return(NA)
-  } else  if ( fa < fb) {
-    # if approx_this is beyond range return upper limit
-    if (fb < approx_this) return(upper)
-    # if function is increasing call .bisect normally
-    a <- lower
-    b <- upper
-  } else {
-    # if approx_this is below range return lower limit
-    if (fa > approx_this) return(lower)
-    # if function is decreasing swap lower and upper
-    a <- upper
-    b <- lower
-  }
-
   # try to call .bisect
   res <- tryCatch(
-    {res_try <- .bisect(param, myform,approx_this,a,b,eps)
+    {res_try <- .bisect(param, myform,approx_this,lower,upper,eps)
     return(res_try)
     }, error = function(err) {
-      print(paste("MY_ERROR:  ",err))
+      print(paste("BISECT ERROR:  ",err))
       return(NA)
     }
     , warning = function(war) {
-      print(paste("MY_WARNING:  ",war))
+      print(paste("BISECT WARNING:  ",war))
       return(NA)
     }
   )

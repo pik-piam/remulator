@@ -4,7 +4,8 @@
 #' scenario and it produces a pdf containing all the figures.
 #' 
 #' @param raw MAgPIE object containing the same raw data that was used to calculate the fitcoefficients.
-#' @param supplycurve MAgPIE object containing the points of the curve (output of \code{\link{calc_supplycurve}})
+#' @param supplycurve_commonY MAgPIE object containing the points of the curve (with common y limit) (output of \code{\link{calc_supplycurve}})
+#' @param supplycurve_indiviY MAgPIE object containing the points of the curve (with individual y limit) (output of \code{\link{calc_supplycurve}})
 #' @param infes MAgPIE object containing the modelstatus (optional output of \code{\link{mute_infes}})
 #' @param emu_path Name of the folder the figures and pdf will be saved to.
 #' @param create_pdf Logical indicating whether a pdf should be produced that compiles all figures.
@@ -19,11 +20,11 @@
 #' @importFrom tidyr spread
 #' @importFrom dplyr filter %>% group_by summarize ungroup inner_join
 
-plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=TRUE) {
+plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu_path="emulator", create_pdf=TRUE) {
 
   ifelse(!dir.exists(emu_path), dir.create(emu_path), FALSE)
   
-  for (scen in getNames(supplycurve,dim=1)) {
+  for (scen in getNames(supplycurve_commonY,dim=1)) {
     path_plots <- file.path(emu_path,scen)
     ifelse(!dir.exists(path_plots), dir.create(path_plots), FALSE)
     outfile <- file.path(emu_path,paste0(scen,"_emulator.pdf"))
@@ -73,7 +74,7 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=
     #==== Overviewplot Supplycurves 1/2 ====
     
     if (create_pdf) swlatex(sw,"\\section{Supplycurve matrix}")
-    dat <- gginput(supplycurve[,,scen], scatter = "type")
+    dat <- gginput(supplycurve_commonY[,,scen], scatter = "type")
     p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) +
       geom_point(data=gginput(raw["GLO",,"modelstat",invert=TRUE][,,scen],scatter = "variable"),aes_string(x=".value.x",y=".value.y"),size=0.3) +
       geom_line(aes_string(colour="scenario")) + 
@@ -88,7 +89,7 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=
     names(color_years) <- gsub("y","",getYears(raw))
     
     if (create_pdf) swlatex(sw,"\\section{Supplycurve all years}")
-    dat <- gginput(supplycurve[,,scen], scatter = "type")
+    dat <- gginput(supplycurve_commonY[,,scen], scatter = "type")
     dat$year <- as.character(dat$year)
     dat_scatter <- gginput(raw["GLO",,"modelstat",invert=TRUE][,,scen],scatter = "variable")
     dat_scatter$year <- as.character(dat_scatter$year)
@@ -110,9 +111,9 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=
     #==== Supplycurves for each year ====
     
     if (create_pdf) swlatex(sw,"\\section{Supplycurve per year}")
-    for(y in getYears(supplycurve)){
+    for(y in getYears(supplycurve_commonY)){
       if (create_pdf) swlatex(sw,paste0("\\subsection{",y,"}"))
-      dat <- gginput(supplycurve[,y,scen], scatter = "type")
+      dat <- gginput(supplycurve_commonY[,y,scen], scatter = "type")
       p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.spat1 ,scales = "fixed") +
         geom_point(data=gginput(raw["GLO",,"modelstat",invert=TRUE][,y,scen],scatter = "variable"),aes_string(x=".value.x",y=".value.y"),size=1,color="gray") +
         theme_grey(base_size = 6) + labs(title = y, y ="$/GJ", x = "EJ") + theme(legend.position="none")
@@ -123,21 +124,21 @@ plot_curve <- function(raw, supplycurve, infes, emu_path="emulator", create_pdf=
     #==== Supplycurves for each region ====
     
     if (create_pdf) swlatex(sw,"\\section{Supplycurve per region}")
-    for(r in getRegions(supplycurve)){
+    for(r in getRegions(supplycurve_indiviY)){
       if (create_pdf) swlatex(sw,paste0("\\subsection{",r,"}"))
-      dat <- gginput(supplycurve[r,,scen], scatter = "type")
+      dat <- gginput(supplycurve_indiviY[r,,scen], scatter = "type")
       dat_raw <- gginput(raw["GLO",,"modelstat",invert=TRUE][r,,scen],scatter = "variable")
       
-      # Remove values from supplycurve that are greater than the underlying raw data
-      # 1. find maximum x value of raw data for each region, year, and scenario
-      lim <-dat_raw %>% 
-        group_by(region,scenario,year) %>% 
-        summarize(maxi = max(.value.x,na.rm=TRUE)) %>%
-        ungroup()
-      
-      # 2. Add maxi column to dat and keep values only that are below max
-      dat <- inner_join(dat,lim,by=c("region"="region","scenario"="scenario","year"="year")) %>% 
-        filter(.value.x < maxi)
+      # # Remove values from supplycurve that are greater than the underlying raw data
+      # # 1. find maximum x value of raw data for each region, year, and scenario
+      # lim <-dat_raw %>% 
+      #   group_by(region,scenario,year) %>% 
+      #   summarize(maxi = max(.value.x,na.rm=TRUE)) %>%
+      #   ungroup()
+      # 
+      # # 2. Add maxi column to dat and keep values only that are below max
+      # dat <- inner_join(dat,lim,by=c("region"="region","scenario"="scenario","year"="year")) %>% 
+      #   filter(.value.x < maxi)
 
       p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.temp1 ,scales = "free") +
         geom_point(data=dat_raw,aes_string(x=".value.x",y=".value.y"),size=1,color="gray") +

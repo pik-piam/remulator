@@ -27,40 +27,51 @@ calculate_fit <- function(data,initial_values=c(1,1,1), form,...) {
       sum((y - userform(param,x))^2,na.rm = TRUE)
     }
     
-    # remove duplicates and NA
-    dat <- dat[!duplicated(dat),]
-    if (!is.null(nrow(dat))) dat <- dat[complete.cases(dat),]
-
-    # if number of points to fit is less than 3 don't try to fit
-    if (!is.null(nrow(dat))) {
-      if (nrow(dat)<5) {
-        #cat("Insufficient number of points availalbe for fit.\n")
-        res <- list(coefficients = c(0,0,0), message = paste("n =",nrow(dat),"Insuff points"))
-        return(res)
-      }
-    } else {
-      #cat("No points available for fit.\n")
-      res <- list(coefficients = c(0,0,0), message = paste0("n = 0 No points"))
-      return(res)
+    # remove NA and duplicates
+    message <- ""
+    dat <- dat[complete.cases(dat),,drop=FALSE]
+    if (length(dat)>2) {
+      nrmdup <- sum(duplicated(dat))
+      if (nrmdup>0) message <- paste0("D",nrmdup)
+      dat <- dat[!duplicated(dat),,drop=FALSE]
     }
 
+    # # if number of points to fit is less than 3 don't try to fit
+    # if (!is.null(nrow(dat))) {
+    #   if (nrow(dat)<5) {
+    #     #cat("Insufficient number of points availalbe for fit.\n")
+    #     res <- list(coefficients = c(0,0,0), message = paste("n =",nrow(dat),"Insuff points"))
+    #     return(res)
+    #   }
+    # } else {
+    #   #cat("No points available for fit.\n")
+    #   res <- list(coefficients = c(NA,NA,NA), message = paste0("n = 0 No points"))
+    #   return(res)
+    # }
+    
+    if (length(dat)<1) {
+      #cat("No points available for fit.\n")
+      res <- list(coefficients = c(NA,NA,NA), message = paste("n = 0",message,"No points"))
+      return(res)
+    }
+    
     # minimize error squares using formula_least_squares
     out <- tryCatch({
       
         opt <- optim(initial_values,fn=formula_least_squares,userform=form,x=dat[,"x"],y=dat[,"y"],method="L-BFGS-B",...) #control=list(maxit=1000),
         #if(opt$convergence>1) cat("\n",opt$message,"\n   ",opt$convergence)
         
-        wasauchimmer <- list(coefficients = opt$par, message = paste("n =",nrow(dat),opt$message))
+        wasauchimmer <- list(coefficients = opt$par, message = paste("n =",nrow(dat),message,opt$message))
 
       }, error = function(err) {
 
-        print(paste("MY_ERROR:  ",err))
-        res <- list(coefficients = c(0,0,0), message = err)
+        print(paste("FIT ERROR:  ",err))
+        res <- list(coefficients = c(NA,NA,NA), message = err)
         return(res)
         
       }, warning = function(war) {
         
-        print(paste("MY_WARNING:  ",war))
+        print(paste("FIT WARNING:  ",war))
         res <- list(coefficients = c(0,0,0), message = war)
         return(res)
          
@@ -75,6 +86,7 @@ calculate_fit <- function(data,initial_values=c(1,1,1), form,...) {
 
   # fit supplycurves for all regions (1), all years (2), and all scenarios (3)
   tmp <- apply(a,c(1,2,3),minimize_least_squares,initial_values,form,...)
+  #minimize_least_squares(dat=a["PAS","y2035",,,],initial_values = initial_values, userform = form,...)
   
   # helper function to extract coefficients and messages from tmp into different variables
   pick <- function(x,i)return(x[[1]][[i]])

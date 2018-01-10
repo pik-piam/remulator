@@ -82,17 +82,18 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   cat("Calculating fit.\n")
   fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =userfun,initial_values = c(0,0,1),...)
   
-  # fill missing years
-  cat("Fill missing years.\n")
-  fitcoef <- fill_missing_years(fitcoef)
+  # # fill missing years
+  # cat("Fill missing years.\n")
+  # fitcoef <- fill_missing_years(fitcoef,nofit=(collapseNames(fitcoef[,,"b"],collapsedim="coeff"))==0)
 
   # calculate supplycurve for plotting
   cat("Calculating supplycurve.\n")
-  supplycurve <- calc_supplycurve(data,fitcoef,myform=userfun)
+  supplycurve_commonY <- calc_supplycurve(data,fitcoef,myform=userfun)
+  supplycurve_indiviY <- calc_supplycurve(data,fitcoef,myform=userfun,ylimit="individual")
   
   # plot supplycurves to single png files and to pdf
   cat("Plotting supplycurve.\n")
-  plot_curve(data,supplycurve,infes,output_path,create_pdf)
+  plot_curve(data,supplycurve_commonY,supplycurve_indiviY,infes,output_path,create_pdf)
   
   return(fitcoef)
 }

@@ -1,18 +1,19 @@
 #' Find fit coefficients for years where no fit could be calculated
 #' 
 #' @param fitcoef MAgPIE object containing the fit coefficients
+#' @param nofit MAgPIE object of the same shape as \code{fitcoef} containing only logicals that indicate where data is not available (TRUE)
 #' @param method Choose method that finds fit coefficients for years with no fit. Currently there is only one method availalbe that in a first step
 #' takes the fit from the subsequent year. If all subsequent years have no fit it takes the fit from the preceding year. 
 #' @return Magpie object with the updated fit coefficients. Has an attribute attached providing the years missing fits were taken from.
 #' @author David Klein
 #' @importFrom magclass collapseNames getYears getRegions getNames
 
-fill_missing_years <- function(fitcoef, method=1) {
+fill_missing_years <- function(fitcoef, nofit, method=1) {
 
   if (method == 1) {
     # Rule: for each region: take fit from the next available year, if there is no fit in any
     # of the next years, take it from the year before
-    nofit <- (collapseNames(fitcoef[,,"b"],collapsedim="coeff"))==0
+    #nofit <- (collapseNames(fitcoef[,,"b"],collapsedim="coeff"))==0
     takenfrom <- nofit + NA # create empty object
     for (s in getNames(fitcoef,dim=1)) {
       for (r in getRegions(fitcoef)) {
