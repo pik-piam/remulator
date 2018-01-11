@@ -20,7 +20,7 @@
 #' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames
 #' @export
 
-emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),n_suff=1,fill=FALSE,output_path,create_pdf=TRUE,...) {
+emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
   
   ########################################################
   ################ structure data ########################

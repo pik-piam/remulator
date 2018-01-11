@@ -1,5 +1,5 @@
 ---
-title: "Fitting curves to magclass data and plotting the curves to nice graphs and pdf"
+title: "Fitting curves to data (of magclass format) and plotting the curves to nice graphs and pdf"
 author: "David Klein"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -14,34 +14,48 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 # Purpose and Functionality
-With this package you can fit a curve to your data. It is a wrapper around the `optim()` function from R's stats package and offers an easy-to-use interface to data in magclass format. Use the main function `emulator()` of this package to fit a curve of the form `y = a + b * x ^d`, where `x` and `y` are the data you provide and `a`,`b`, and `d` are the coefficients the `emulator()` function will calculate using the `optim()` function from R's stats package. The resulting curves together with the raw data will be plotted and saved to figures and compiled in a pdf.
+With this package you can fit a curve to your data. It is a wrapper around the `optim()` function from R's stats package and offers an easy-to-use interface to data in magclass format. Use the main function `emulator()` of this package to fit a curve of the form `y = a + b * x ^c`, where `x` and `y` are the data you provide and `a`,`b`, and `c` are the coefficients the `emulator()` function will calculate using the `optim()` function from R's stats package. The `emulator()´ function generates a separate fit for each region and each year. The resulting curves together with the raw data will be plotted and saved to figures and compiled in a pdf.
 
 # Input data
-The data is required to be of the magclass format. The data you want to fit the curves to needs to have at least three variables:
+The raw input data for which the `emulator()´ function will calculate the fits needs to be provided in the magclass format. It needs to have at least three variables:
 
 * data that will be used for `x` and `y` in the fit
 * a variable that provides the codes of the GAMS model status (<https://www.gams.com/24.8/docs/userguides/mccarl/modelstat_tmodstat.htm>). Data from infeasible years and their successors will be excluded from the fit.
 
-The `emulator()` function requires the data to be of a particular format. There are two alternative formats allowed. The following sections explain the differences and give examples how to apply the emulator function.
+The `emulator()` function requires the data to be of a particular format. There are two alternative formats allowed. The following Examples section explains the differences and gives examples how to apply the emulator function.
 
 # Examples
 
 ## Alternative A: Calculate emulator for one single case consisting of all scenarios present in the data
-This requires the data to have the following structure. Note: the data has no "sample" dimension (see alternative B), just scenario, model, and variable. All scenarios in your data will be lumped together and the fit will be perfomred on all data points from all scenarios. 
+This requires the data to have the structure as displayed below: region, year, scenario, model, variable.
 
-```{r, echo = TRUE}
+```{r, echo = TRUE, eval=FALSE}
 library(remulator)
 library(magclass)
 str(emudata)
-
+# Formal class 'magpie' [package "magclass"] with 1 slot
+#   ..@ .Data: num [1:11, 1:11, 1:438] 0.228 NA NA NA 6.439 ...
+#   .. ..- attr(*, "dimnames")=List of 3
+#   .. .. ..$ region                 : chr [1:11] "AFR" "CPA" "EUR" "FSU" ...
+#   .. .. ..$ year                   : chr [1:11] "y2005" "y2015" "y2025" "y2035" ...
+#   .. .. ..$ scenario.model.variable: chr [1:438] "CDL_base-base-1.MAgPIE.Primary Energy|Biomass|Energy Crops (EJ/yr)" "CDL_base-base-10.MAgPIE.Primary Energy|Biomass|Energy Crops (EJ/yr)" "CDL_base-base-11.MAgPIE.Primary Energy|Biomass|Energy Crops (EJ/yr)" "CDL_base-base-12.MAgPIE.Primary Energy|Biomass|Energy Crops (EJ/yr)" ...
 ```
 
-When calling the `emulator()` funtion you need to provide the data as such of course, the name of the variables (present in your data) that will be treated as `x` and `y` in the fit, and the name of the variable that holds the model status. Optionally you can provide the model status codes that will be treated as infeasible. By default it is 5. All results will be saved to `output_path`. Optionally you can provide arguments of the `optim()` function, such as lower or upper bounds. The function performs the following steps:
+Note: the data has no "sample" dimension (see alternative B), just scenario, model, and variable. All scenarios in your data will be lumped together and the fit will be performed on all data points from all scenarios. 
+
+When calling the `emulator()` funtion you need to provide
+
+* the input data set, 
+* the name of the variables (present in your data) that will be treated as `x` and `y` in the fit, and 
+* the name of the variable that holds the model status. 
+
+There are more arguments to the `emulator()` function, all of which have defaults (plese see `?emulator`). All results will be saved to `output_path` (which is "emulator" by default). Optionally you can pass further arguments to the `optim()` function, such as lower or upper bounds on the fit coefficients. The `emulator()` function performs the following steps:
 
 * it sorts out data of infeasible years and all years following an infeasible year
-* for each region and each year it fits a curve of the form `y = a + b * x ^d`, where `x` and `y` are the data you provide and `a`,`b`, and `d` are the coefficients the `emulator()` function will calculate using the `optim()` function from R's stats package
+* for each region and each year it fits a curve of the form `y = a + b * x ^d`, where `x` and `y` are the data you provide and `a`,`b`, and `c` are the coefficients the `emulator()` function will calculate using the `optim()` function from R's stats package
 * using the fit coefficients from above it will calculate continous curves for plotting
-* it plots the curves to png files and additionally compiles them to a pdf file
+* it plots the curves and saves them to png files
+* it additionally compiles the pngs to a pdf file (if `calc_pdf=TRUE`)
 
 ```{r, echo = TRUE, eval=FALSE}
 emulator(data=emudata,
@@ -54,7 +68,7 @@ emulator(data=emudata,
 ```
 
 ## Alternative B: Calculate emulator for multiple cases. Distinguish cases by scenarios present in the data.
-If your data contains the additional dimension named "sample", the `emulator()` function will distinguish data by the scenario names and perform the fit based on the data points of all samples per scenario. Thus, there will be a fit for each scenario. This requires the data to have the following structure including a "sample" dimension
+If your data contains the additional dimension named "sample", the `emulator()` function will distinguish the data by the scenario names and perform the fit based on the data points of all samples per scenario. Thus, there will be fits for each scenario. This requires the data to have the following structure including a "sample" dimension
 
 ```{r, echo = TRUE}
 # Formal class 'magpie' [package "magclass"] with 1 slot
@@ -70,7 +84,8 @@ scenario names and putting them into the new "sample" dimension. This results in
 
 Magclass objects distinguish dimensions by dots in the variable names. Thus, we add a new dimension to magclass object by inserting a dot. In this case we do this by replacing the dash in the scenario name with a dot, e.g. from "-63" to ".63" (see the gsub command below).
 
-```{r, echo = TRUE}
+```{r, echo = TRUE,eval=FALSE}
+library(magclass)
 # Add dimension by replacing dashes with dots
 getNames(emudata,dim="scenario") <- 
   gsub("-([0-9]{1,2}$)",".\\1",getNames(emudata,dim="scenario"))
@@ -78,7 +93,7 @@ getNames(emudata,dim="scenario") <-
 getSets(emudata) <- c("region","year","scenario","sample","model","variable")
 ```
 
-The call if the `emulator()` function is the same, except using a different output directory.
+We call the `emulator()` function the same way (except that for our example we choose a different output directory). The function will automatically detect the additional sample dimension and perform all procedures for each scenario:
 
 ```{r, echo = TRUE, eval=FALSE}
 emulator(data=emudata,
@@ -90,4 +105,4 @@ emulator(data=emudata,
          lower=c(0,0,1))
 ```
 
-The output from alternative A and B are different: the output of A (single case) consists of only one scenario named "default". Since in B the fits have been performed separately for the two scenarios the output folder contains two sub folders, one for each scenario.
+The outputs from alternative A and B are different: the output of A (single case) consists of only one scenario named "default". Since in B the fits have been performed separately for the two scenarios the output folder contains two sub folders, one for each scenario.
