@@ -10,7 +10,7 @@
 #' @param ... Arguments passed on to the \code{optim} function. Useful to define bounds on fit coefficients.
 #' @return MAgPIE object with fit coefficients a, b, and d
 #' @author David Klein
-#' @importFrom stats optim 
+#' @importFrom stats optim complete.cases
 #' @importFrom magclass unwrap as.magpie getSets<-
 
 calculate_fit <- function(data,initial_values=c(1,1,1), form,...) {

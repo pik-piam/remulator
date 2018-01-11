@@ -12,13 +12,11 @@
 #' @author David Klein
 #' @seealso \code{\link{calc_supplycurve}} \code{\link{mute_infes}}
 #' @importFrom magclass getNames getYears
-#' @importFrom ggplot2 ggplot ggsave aes_string geom_tile scale_fill_gradient scale_x_discrete scale_y_discrete theme_bw ggsave facet_wrap theme_gray geom_line scale_colour_manual labs theme_grey xlab ggtitle geom_point facet_grid theme_minimal
+#' @importFrom ggplot2 ggplot ggsave aes_string geom_tile scale_fill_gradient scale_x_discrete scale_y_discrete theme_bw ggsave facet_wrap theme_gray geom_line scale_colour_manual labs theme_grey xlab ggtitle geom_point facet_grid theme_minimal theme
 #' @importFrom luplot gginput as.ggplot
 #' @importFrom lusweave swopen swclose swfigure swlatex
 #' @importFrom grDevices colorRampPalette
 #' @importFrom stats na.omit
-#' @importFrom tidyr spread
-#' @importFrom dplyr filter %>% group_by summarize ungroup inner_join
 
 plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu_path="emulator", create_pdf=TRUE) {
 
@@ -129,6 +127,7 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
       dat <- gginput(supplycurve_indiviY[r,,scen], scatter = "type")
       dat_raw <- gginput(raw["GLO",,"modelstat",invert=TRUE][r,,scen],scatter = "variable")
       
+      # @importFrom dplyr filter %>% group_by summarize ungroup inner_join
       # # Remove values from supplycurve that are greater than the underlying raw data
       # # 1. find maximum x value of raw data for each region, year, and scenario
       # lim <-dat_raw %>% 

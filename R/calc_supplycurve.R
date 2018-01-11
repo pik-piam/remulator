@@ -5,7 +5,7 @@
 #' 
 #' @param data MAgPIE object containing the same data that was used to calculate the fitcoefficients.
 #' @param fitcoef MAgPIE object containing the fitcoefficients (output of \code{\link{calculate_fit}})
-#' @param maform Function that was fitted and is used here to calculate curve
+#' @param myform Function that was fitted and is used here to calculate curve
 #' @param ylimit Choose the method to calculate the upper limit for the y values. Options: "individual", the maximal value up to which 
 #' the y values of the supplycurve are calculated is done individualy for each reagion and year. "common" (default), the upper limit of  
 #' the y values of the supplycurve for all regions and years is the same and is the maximum of the raw data. This is useful for plotting,
@@ -13,7 +13,7 @@
 #' @return MAgPIE object containing the points on the curve.
 #' @author David Klein
 #' @seealso \code{\link{calculate_fit}} \code{\link{plot_curve}}
-#' @importFrom magclass unwrap as.magpie getSets setNames collapseNames add_dimension mbind getSets<-
+#' @importFrom magclass unwrap as.magpie getSets setNames collapseNames add_dimension mbind getSets<- ndata
 
 calc_supplycurve <- function(data,fitcoef,myform,ylimit="common") {
   

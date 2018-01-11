@@ -6,7 +6,7 @@
 #' takes the fit from the subsequent year. If all subsequent years have no fit it takes the fit from the preceding year. 
 #' @return Magpie object with the updated fit coefficients. Has an attribute attached providing the years missing fits were taken from.
 #' @author David Klein
-#' @importFrom magclass collapseNames getYears getRegions getNames
+#' @importFrom magclass collapseNames getYears getRegions getNames setYears
 #' @export
 
 fill_missing_years <- function(fitcoef, nofit, method=1) {
