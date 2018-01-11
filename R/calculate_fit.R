@@ -29,10 +29,14 @@ calculate_fit <- function(data,initial_values=c(1,1,1), form,...) {
     
     # remove NA and duplicates
     message <- ""
+    #if (sum(!complete.cases(dat))>0) cat("calculate_fit: Removed",sum(!complete.cases(dat)),"incomplete cases from your data!\n")
     dat <- dat[complete.cases(dat),,drop=FALSE]
     if (length(dat)>2) {
       nrmdup <- sum(duplicated(dat))
-      if (nrmdup>0) message <- paste0("D",nrmdup)
+      if (nrmdup>0) { 
+        cat("calculate_fit: Removed",nrmdup,"duplicates from your data!\n")
+        message <- paste0("D",nrmdup)
+      }
       dat <- dat[!duplicated(dat),,drop=FALSE]
     }
 

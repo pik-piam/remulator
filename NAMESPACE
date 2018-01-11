@@ -2,6 +2,7 @@
 
 export(emulator)
 export(emulator_runs_complete)
+export(fill_missing_years)
 export(read_and_combine)
 importFrom(dplyr,"%>%")
 importFrom(dplyr,filter)

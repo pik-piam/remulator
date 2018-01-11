@@ -7,8 +7,11 @@
 #' @param name_y Name of the variable in \code{data} that will be treated as y in the fit
 #' @param name_modelstat Name of the variable that contains the modelstatus
 #' @param treat_as_infes GAMS model status codes that will be regarded infeasible. See \url{https://www.gams.com/24.8/docs/userguides/mccarl/modelstat_tmodstat.htm}
-#' @param userfun Function to fit. User can provide a functional form using the following syntax: \code{function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])}. 
-#' This is function is also the default.
+#' @param userfun Function to fit. User can provide a functional form using the following 
+#' syntax: \code{function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])}. This function is the default.
+#' @param n_suff Minial number (default=1) of data points in a specific year and region that is sufficient to perform a fit. 
+#' If the number of available data points is less no fit will be generated for this year and region.
+#' @param fill Logical (default=FALSE) indicating whether data will be copied from subsequent year if in the current year not enough data points are avaialbe.
 #' @param output_path Path to save the output to
 #' @param create_pdf Logical indicating whether a pdf should be produced that compiles all figures.
 #' @param ... Arguments passed on to the \code{optim} function in \code{calcualte_fit}. Useful to define bounds on fit coefficients.
@@ -17,13 +20,13 @@
 #' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames
 #' @export
 
-emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),output_path,create_pdf=TRUE,...) {
+emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),n_suff=1,fill=FALSE,output_path,create_pdf=TRUE,...) {
   
   ########################################################
-  ################ prepare data ##########################
+  ################ structure data ########################
   ########################################################
 
-    # if data contains "sample" dimension (n samples for each scenario) -> ok
+  # if data contains "sample" dimension (n samples for each scenario) -> ok
   # if data does not contain "sample" dimension -> all n scenarios will be lumped together to one scenario with n samples 
   # (with n being the number of previous scenarios)
   
@@ -42,7 +45,7 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   if (setequal(getSets(data),sets_ready_to_use)) {
     # Data has required structure, already containing "sample" dimension (n samples for each scenario) -> ok
   } else if (setequal(getSets(data),sets_for_single_scenario)) {
-    # Data has no "sample" dimension -> all scenarios will be lumped together to one scenario with n samples
+    # Data has no "sample" dimension -> all n scenarios will be lumped together to one scenario with n samples
     # replace scenario names with numbers
     getNames(data,dim=1) <- 1:length(getNames(data,dim=1))
     # rename "scenario" dimension to "sample"
@@ -53,14 +56,11 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
     stop("Input data has to have the following sets: either\n",sets_ready_to_use,"\n or\n",sets_for_single_scenario,"\n but has\n",getSets(data))
   }
 
-  vars <- c(name_x,name_y,name_modelstat)
-  names(vars) <- c("x","y","modelstat")
+  # pick variables as provided by user
+  data <- data[,,c(name_x,name_y,name_modelstat)]
   
-  # pick variables as defined in "vars"
-  data <- data[,,vars]
-  
-  # rename variables to names given in "vars"
-  getNames(data,dim="variable") <- names(vars)
+  # rename variables to generic short names
+  getNames(data,dim="variable") <- c("x","y","modelstat")
   
   # remove model dimension
   if ("model" %in% getSets(data)) {
@@ -72,15 +72,35 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   ################ calculate emulator ####################
   ########################################################
   
-  # set data to NA in infeasible years and the years after
+  # Filter data before fitting: set infeasible and duplicated data to NA
+
+  # set data in infeasible years and in subsequent years to NA 
   data <- mute_infes(data = data, name="modelstat", infeasible = treat_as_infes)
   
   # get magpie object marking infeasible years (only for plotting below)
   infes <- mute_infes(data = data, name="modelstat", infeasible = treat_as_infes, return_infes = TRUE)
   
+  # set duplicated samples to NA
+  data <- mute_duplicated(data)
+  
+  # find number of non-NA elements
+  n_exist <- as.magpie(apply(unwrap(data),c(1,2,3,5),function(x)sum(!is.na(x))))
+
+  # How much is "enough" data
+  nodata <- n_exist[,,"x"]<n_suff
+  
+  # If in current year not enough data is availalbe (TRUE in nodata) copy it from other years
+  if(fill) {
+    cat("Fill missing years.\n")
+    data <- fill_missing_years(data,nodata)
+  }
+
   # calculate fit coefficients
   cat("Calculating fit.\n")
   fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =userfun,initial_values = c(0,0,1),...)
+  
+  # attach information "takenfrom" (originally created by fill_missing_years) to fitcoef (since it is the return value of this function)
+  if (fill) attr(fitcoef,"inputtakenfrom") <- attr(data,"takenfrom")
   
   # # fill missing years
   # cat("Fill missing years.\n")
