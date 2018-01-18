@@ -1,7 +1,7 @@
 Package: remulator
 Type: Package
 Title: R emulator
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: c(person("David", "Klein", email = "dklein@pik-potsdam.de", role = c("aut","cre")))
 Description: A collection of R tools for fitting model results. 
 License: LGPL-3 | file LICENSE

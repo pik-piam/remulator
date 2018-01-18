@@ -14,7 +14,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 # Purpose and Functionality
-With this package you can fit a curve to your data. It is a wrapper around the `optim()` function from R's stats package and offers an easy-to-use interface to data in magclass format. Use the main function `emulator()` of this package to fit a curve of the form `y = a + b * x ^c`, where `x` and `y` are the data you provide and `a`,`b`, and `c` are the coefficients the `emulator()` function will calculate using the `optim()` function from R's stats package. The `emulator()´ function generates a separate fit for each region and each year. The resulting curves together with the raw data will be plotted and saved to figures and compiled in a pdf.
+With this package you can fit a curve to your data. It is a wrapper around the `optim()` function from R's stats package and offers an easy-to-use interface to data in magclass format. Use the main function `emulator()` of this package to fit a curve of the form you can provide. In this example we use `y = a + b * x ^c`, where `x` and `y` are the data you provide and `a`,`b`, and `c` are the coefficients the `emulator()` function will calculate using the `optim()` function from R's stats package. The `emulator()´ function generates a separate fit for each region and each year. The resulting curves together with the raw data will be plotted and saved to figures and compiled in a pdf. See at the bottom how to define your own functional form.
 
 # Input data
 The raw input data for which the `emulator()´ function will calculate the fits needs to be provided in the magclass format. It needs to have at least three variables:
@@ -52,7 +52,7 @@ When calling the `emulator()` funtion you need to provide
 There are more arguments to the `emulator()` function, all of which have defaults (plese see `?emulator`). All results will be saved to `output_path` (which is "emulator" by default). Optionally you can pass further arguments to the `optim()` function, such as lower or upper bounds on the fit coefficients. The `emulator()` function performs the following steps:
 
 * it sorts out data of infeasible years and all years following an infeasible year
-* for each region and each year it fits a curve of the form `y = a + b * x ^d`, where `x` and `y` are the data you provide and `a`,`b`, and `c` are the coefficients the `emulator()` function will calculate using the `optim()` function from R's stats package
+* for each region and each year it fits a curve of the form `y = a + b * x ^c`, where `x` and `y` are the data you provide and `a`,`b`, and `c` are the coefficients the `emulator()` function will calculate using the `optim()` function from R's stats package
 * using the fit coefficients from above it will calculate continous curves for plotting
 * it plots the curves and saves them to png files
 * it additionally compiles the pngs to a pdf file (if `calc_pdf=TRUE`)
@@ -106,3 +106,32 @@ emulator(data=emudata,
 ```
 
 The outputs from alternative A and B are different: the output of A (single case) consists of only one scenario named "default". Since in B the fits have been performed separately for the two scenarios the output folder contains two sub folders, one for each scenario.
+
+## How to define your own function to be fitted
+
+By default the function that is fitted to the data points is `y = a + b * x ^c`. You can define your own function and pass it to the `emulator()` function. Please use the following syntax to define your function: each fit coefficient is given by `param[[i]]` with `i` being the ordinal number of the coefficient (starting with 1). The definition of the default function `y = a + b * x ^c` looks as follows:
+
+```{r, echo = TRUE, eval=FALSE}
+beautiful_shape <- function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])
+```
+
+A linear fit would look like
+
+```{r, echo = TRUE, eval=FALSE}
+beautiful_shape <- function(param,x)return(param[[1]] + param[[2]] * x)
+```
+
+Then pass your function to the `emulator()` function. NOTE: If you provide your own function you need to provide an initial value for each of the fit coefficients!
+
+```{r, echo = TRUE, eval=FALSE}
+
+emulator(data=emudata,
+         name_x="Primary Energy|Biomass|Energy Crops (EJ/yr)",
+         name_y="Price|Primary Energy|Biomass (US$2005/GJ)",
+         name_modelstat="Modelstatus (-)",
+         treat_as_infes = c(5,7),
+         userfun=beautiful_shape,
+         initial_values=c(0,1)
+         output_path = "multi_case",
+         lower=c(0,0))
+```

@@ -9,7 +9,8 @@
 #' @param treat_as_infes GAMS model status codes that will be regarded infeasible. See \url{https://www.gams.com/24.8/docs/userguides/mccarl/modelstat_tmodstat.htm}
 #' @param userfun Function to fit. User can provide a functional form using the following 
 #' syntax: \code{function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])}. This function is the default.
-#' @param n_suff Minial number (default=1) of data points in a specific year and region that is sufficient to perform a fit. 
+#' @param initial_values Vector with initial values of the fit coefficients.
+#' @param n_suff Minial number (default=1) of data points in a specific year and region that will be regarded as sufficient to perform a fit.
 #' If the number of available data points is less no fit will be generated for this year and region.
 #' @param fill Logical (default=FALSE) indicating whether data will be copied from subsequent year if in the current year not enough data points are avaialbe.
 #' @param output_path Path to save the output to
@@ -20,7 +21,7 @@
 #' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames
 #' @export
 
-emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
+emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
   
   ########################################################
   ################ structure data ########################
@@ -97,7 +98,7 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
 
   # calculate fit coefficients
   cat("Calculating fit.\n")
-  fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =userfun,initial_values = c(0,0,1),...)
+  fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =userfun,initial_values = initial_values,...)
   
   # attach information "takenfrom" (originally created by fill_missing_years) to fitcoef (since it is the return value of this function)
   if (fill) attr(fitcoef,"inputtakenfrom") <- attr(data,"takenfrom")

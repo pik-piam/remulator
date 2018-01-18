@@ -40,48 +40,30 @@ calculate_fit <- function(data,initial_values=c(1,1,1), form,...) {
       dat <- dat[!duplicated(dat),,drop=FALSE]
     }
 
-    # # if number of points to fit is less than 3 don't try to fit
-    # if (!is.null(nrow(dat))) {
-    #   if (nrow(dat)<5) {
-    #     #cat("Insufficient number of points availalbe for fit.\n")
-    #     res <- list(coefficients = c(0,0,0), message = paste("n =",nrow(dat),"Insuff points"))
-    #     return(res)
-    #   }
-    # } else {
-    #   #cat("No points available for fit.\n")
-    #   res <- list(coefficients = c(NA,NA,NA), message = paste0("n = 0 No points"))
-    #   return(res)
-    # }
-    
     if (length(dat)<1) {
-      #cat("No points available for fit.\n")
-      res <- list(coefficients = c(NA,NA,NA), message = paste("n = 0",message,"No points"))
+      res <- list(coefficients = rep(NA,length(initial_values)), message = paste("n = 0",message,"No points"))
       return(res)
     }
     
     # minimize error squares using formula_least_squares
     out <- tryCatch({
       
-        opt <- optim(initial_values,fn=formula_least_squares,userform=form,x=dat[,"x"],y=dat[,"y"],method="L-BFGS-B",...) #control=list(maxit=1000),
-        #if(opt$convergence>1) cat("\n",opt$message,"\n   ",opt$convergence)
-        
+        opt <- optim(initial_values,fn=formula_least_squares,userform=userform,x=dat[,"x"],y=dat[,"y"],method="L-BFGS-B",...) #control=list(maxit=1000),
         wasauchimmer <- list(coefficients = opt$par, message = paste("n =",nrow(dat),message,opt$message))
 
       }, error = function(err) {
 
         print(paste("FIT ERROR:  ",err))
-        res <- list(coefficients = c(NA,NA,NA), message = err)
+        res <- list(coefficients = rep(NA,length(initial_values)), message = err)
         return(res)
         
       }, warning = function(war) {
         
         print(paste("FIT WARNING:  ",war))
-        res <- list(coefficients = c(0,0,0), message = war)
+        res <- list(coefficients = rep(NA,length(initial_values)), message = war)
         return(res)
-         
       }
     )
-
     return(out)
   }
   

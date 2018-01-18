@@ -63,7 +63,7 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
     #==== P L O T: raw data ====
     
     if (create_pdf) swlatex(sw,"\\section{Raw data of feasible runs}")
-    dat <- na.omit(gginput(raw[,,]["GLO",,"modelstat",invert=TRUE],scatter = "variable"))
+    dat <- na.omit(gginput(raw[,,scen]["GLO",,"modelstat",invert=TRUE],scatter = "variable"))
     scatter_raw <- ggplot(dat, aes_string(x=".value.x",y=".value.y",color="scenario")) + geom_point(size=0.3) +
       theme_minimal(base_size = 6) + facet_grid(.temp1~.spat1 ,scales = "fixed") + labs(y ="$/GJ", x = "EJ") + theme(legend.position="none")
     ggsave(filename = file.path(path_plots,paste0("scatter-raw-all.png")),plot=scatter_raw,width=10,height=6)
