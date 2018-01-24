@@ -18,7 +18,7 @@
 #' @param ... Arguments passed on to the \code{optim} function in \code{calcualte_fit}. Useful to define bounds on fit coefficients.
 #' @return MAgPIE object containning fit coefficients
 #' @author David Klein
-#' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames
+#' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames new.magpie
 #' @export
 
 emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
@@ -70,34 +70,45 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   }
   
   ########################################################
-  ################ calculate emulator ####################
+  ################# filter raw data ######################
   ########################################################
   
-  # Filter data before fitting: set infeasible and duplicated data to NA
+  # Filter data before fitting: set infeasible, duplicated, and outlier data to NA
+
+  # save raw data before filtering for plotting later
+  raw <- data
 
   # set data in infeasible years and in subsequent years to NA 
+  cat("Removing data of infeasible years.\n")
   data <- mute_infes(data = data, name="modelstat", infeasible = treat_as_infes)
   
   # get magpie object marking infeasible years (only for plotting below)
-  infes <- mute_infes(data = data, name="modelstat", infeasible = treat_as_infes, return_infes = TRUE)
+  infes <- attributes(data)$infeasible
   
   # set duplicated samples to NA
+  cat("Removing duplicates.\n")
   data <- mute_duplicated(data)
-  
-  # find number of non-NA elements
-  n_exist <- as.magpie(apply(unwrap(data),c(1,2,3,5),function(x)sum(!is.na(x))))
 
-  # How much is "enough" data
-  nodata <- n_exist[,,"x"]<n_suff
+  # Find outliers and set them to NA
+  cat("Removing outliers.\n")
+  data <- mute_outliers(data,range=1.5)
   
+  # Set insufficient data points to NA
+  cat("Checking if number of remaining data points is sufficient (>=",n_suff,").\n")
+  data <- mute_insufficient(data,n_suff)
+
   # If in current year not enough data is availalbe (TRUE in nodata) copy it from other years
   if(fill) {
-    cat("Fill missing years.\n")
+    cat("Copy data to years with unsufficient number of data points.\n")
+    nodata <- attributes(data)$insufficient
     data <- fill_missing_years(data,nodata)
   }
-
-  # calculate fit coefficients
-  cat("Calculating fit.\n")
+  
+  ########################################################
+  ########### calculate fit coefficients #################
+  ########################################################
+  
+  cat("Calculating fit coefficients.\n")
   fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =userfun,initial_values = initial_values,...)
   
   # attach information "takenfrom" (originally created by fill_missing_years) to fitcoef (since it is the return value of this function)
@@ -107,14 +118,44 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   # cat("Fill missing years.\n")
   # fitcoef <- fill_missing_years(fitcoef,nofit=(collapseNames(fitcoef[,,"b"],collapsedim="coeff"))==0)
 
-  # calculate supplycurve for plotting
+  ########################################################
+  ######### calculate supplycurve for plotting ###########
+  ########################################################
+  
   cat("Calculating supplycurve.\n")
   supplycurve_commonY <- calc_supplycurve(data,fitcoef,myform=userfun)
   supplycurve_indiviY <- calc_supplycurve(data,fitcoef,myform=userfun,ylimit="individual")
   
-  # plot supplycurves to single png files and to pdf
+  ########################################################
+  ######## label data points for scatter plots ###########
+  ########################################################
+  
+  # Gather all information about filtered data (infeasible, duplicates,
+  # outliers) in one MAgPIE object that will be used for plotting.
+  cat("Gathering data for plotting.\n")
+  
+  # fetch attributes from data (TURE/FALSE flags)
+  dupli <- attributes(data)$duplicated
+  outly <- !is.na(attributes(data)$outliers) & attributes(data)$outliers # convert NA to FALSE, keep TRUE
+  infes <- new.magpie(getRegions(dupli),getYears(dupli),getNames(dupli),fill = FALSE) # to have all regions not only GLO
+  infes[,,] <- attributes(data)$infeasible
+  
+  # separate raw data into different columns of filtered
+  filtered <- add_dimension(raw, dim=3.4,add="type",nm="fitted")
+  filtered <- add_columns(filtered,dim=3.4,addnm = c("duplicated","infeasible","outliers"))
+  filtered[,,"duplicated"][dupli] <- filtered[,,"fitted"][dupli]
+  filtered[,,"infeasible"][infes] <- filtered[,,"fitted"][infes]
+  filtered[,,"outliers"][outly]   <- filtered[,,"fitted"][outly]
+  
+  # after all values have been transferred: keep only valid values in "fitted" by replacing invalide values with NA
+  filtered[,,"fitted"][dupli|infes|outly] <- NA
+
+  ########################################################
+  ########### plot supplycurves (png/pdf) ################
+  ########################################################
+  
   cat("Plotting supplycurve.\n")
-  plot_curve(data,supplycurve_commonY,supplycurve_indiviY,infes,output_path,create_pdf)
+  plot_curve(filtered,supplycurve_commonY,supplycurve_indiviY,infes["GLO",,],output_path,create_pdf)
   
   return(fitcoef)
 }

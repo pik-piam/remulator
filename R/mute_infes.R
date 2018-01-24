@@ -8,13 +8,12 @@
 #' 
 #' @param data MAgPIE object containing the results of a MAgPIE run and the modelstatus.
 #' @param name String providing the name of the variable that holds the modelstatus.
-#' @param return_infes Logical. If TRUE function return matrix with modelstatus instead of data.
 #' @param infeasible Integer vector defining which modelstatus will be treated as infeasible.
 #' @return Magpie object with either filtered model data or the modelstatus.
 #' @author David Klein
-#' @importFrom magclass collapseNames as.magpie
+#' @importFrom magclass collapseNames as.magpie new.magpie
 
-mute_infes <- function(data,name="Modelstatus (-)",infeasible=5,return_infes=FALSE) {
+mute_infes <- function(data,name="Modelstatus (-)",infeasible=5) {
   
   ##########################################################################
   ##### D A T A: set infeasible years and their successors to NA ###########
@@ -27,9 +26,6 @@ mute_infes <- function(data,name="Modelstatus (-)",infeasible=5,return_infes=FAL
     infes <- tmp | infes
   }
   
-  # keep the scenario even if it's only one
-  infes <- collapseNames(infes, collapsedim = "variable")
-  
   # set infeasible years to NA
   infes[infes]  <- NA
   # and feasible years to 0 (so that they don't affect the cumsum below)
@@ -38,11 +34,23 @@ mute_infes <- function(data,name="Modelstatus (-)",infeasible=5,return_infes=FAL
   infes <- as.magpie(apply(X = infes, MARGIN = c(1,3), FUN = cumsum))
   # set feasible years from 0 to 1 so that they don't change the results of the multiplication below)
   infes[!is.na(infes)] <- 1
-  if (!return_infes) {
-    # multiplying keeps only feasible years and sets infeasible years to NA
-    data <- data*infes
-    return(data)
-  } else {
-    return(infes)
-  }
+  # multiplying keeps only feasible years and sets infeasible years to NA
+  tmp <- data*infes
+  
+  # to keep attributes (have been erased by multiplication above)
+  data[,,] <- tmp
+  
+  # convert back to TRUE/FALSE: infeasible = NA -> TRUE. feasible != NA -> FALSE
+  infes <- as.magpie(is.na(infes))
+
+  # find number of TRUE elements
+  infes_count <- new.magpie(getRegions(data),getYears(data),getNames(data,dim="scenario"))
+  infes_count[,,] <- as.magpie(apply(unwrap(infes),c(1,2,3),sum))
+  
+  # Attach infes (TRUE/FALSE) as attribute to data before TRUE/FALSE are changed to 1/0
+  attr(data,"infeasible") <- collapseNames(as.magpie(infes), collapsedim = "variable") # keep the scenario even if it's only one
+  # Attach infes_count as attribute to data
+  attr(data,"infeasible_count") <- infes_count
+
+  return(data)
 }

@@ -10,9 +10,7 @@
 
 mute_duplicated <- function(data) {
   
-  a <- unwrap(data)
-  
-  dupli <- apply(a,c(1,2,3),duplicated)
+  dupli <- apply(unwrap(data), c(1,2,3), duplicated)
   # put dimenson one (samples) to the end
   dupli <- aperm(dupli,c(2,3,4,1))
   # provide names for samples
@@ -22,11 +20,21 @@ mute_duplicated <- function(data) {
   
   dupli <- as.magpie(dupli)
   
+  # find number of TRUE elements
+  dupli_count <- as.magpie(apply(unwrap(dupli),c(1,2,3),sum))
+  # Attach dupli (TRUE/FALSE) as attribute to data before TRUE/FALSE are changed to 1/0
+  attr(data,"duplicated") <- dupli
+  # Attach infes_count as attribute to data
+  attr(data,"duplicated_count") <- dupli_count
+
   dupli[dupli] <- NA # duplicated values: TRUE  -> NA
   dupli[!dupli] <- 1 # unique values    : FALSE -> 1
   
   # set duplicated values in data to NA by multiplying with dupli
-  data <- data*dupli
-
+  tmp <- data*dupli
+  
+  # to keep attributes (would be erased by multiplication)
+  data[,,] <- tmp
+  
   return(data)
 }
