@@ -3,11 +3,12 @@
 #' This function sets outlier samples (per region, year, model, scenario) to NA. This is useful to 
 #' clean your data before fitting. A data point is considered an outlier if it is more than \code{range} times
 #' of the interquartile range away from the the upper or lower end of the interquartile range
-#' http://colingorrie.github.io/outlier-detection.html
+#' \url{http://colingorrie.github.io/outlier-detection.html}
 #' 
 #' @param data MAgPIE object containing the samples to remove the duplicates from.
 #' @param range Multiplied with the interquartile range this is the maximal distance a data point may have to not be considered an outlier.
 #' @return Magpie object with duplicated samples set to NA.
+#' @seealso \code{\link[graphics]{boxplot}}
 #' @author David Klein
 #' @importFrom stats complete.cases lm
 #' @importFrom magclass getNames as.magpie
@@ -29,7 +30,7 @@ mute_outliers <- function(data,range=1.5) {
     # find outliers
     outliers <- 0
     mm <- lm(dat[,"y"]~dat[,"x"]) # perform a linear fit
-    # define data points as outliers that are more than 1.5 times of the interquartile
+    # define data points as outliers that are more than range times of the interquartile
     # range away from the the upper or lower end of the interquartile range
     # http://colingorrie.github.io/outlier-detection.html
     bb <- boxplot(mm$residuals,plot=FALSE,range=range)

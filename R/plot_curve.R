@@ -140,8 +140,8 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
       #   filter(.value.x < maxi)
 
       p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.temp1 ,scales = "free") +
+        geom_point(data=dat_raw[dat_raw$type!="fitted",],aes_string(x=".value.x",y=".value.y",color="type"),alpha=0.5,size=1) +
         geom_point(data=dat_raw[dat_raw$type=="fitted",],aes_string(x=".value.x",y=".value.y"),size=1,color="black") +
-        geom_point(data=dat_raw[dat_raw$type!="fitted",],aes_string(x=".value.x",y=".value.y",color="type"),size=0.4) +
         theme_grey(base_size = 6) + labs(title = r, y ="$/GJ", x = "EJ")# + theme(legend.position="none")
       ggsave(filename = file.path(path_plots,paste0("scatter-fit-",scen,"-",r,".png")),plot=p,width=10,height=6)
       if (create_pdf) swfigure(sw,print,p,fig.width=1)
