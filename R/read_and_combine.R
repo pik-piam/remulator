@@ -12,33 +12,34 @@
 #' @author David Klein
 #' @importFrom magclass read.report add_columns mbind
 #' @importFrom magpie modelstat
+#' @importFrom madrat regionscode
 #' @export
 
 read_and_combine <- function(list_of_directories, outfile=NULL) {
   cat("Collecting results.\n")
   mag_res <- NULL
-  regionscode <- NULL
+  rcode <- NULL
   for (f in list_of_directories) {
     # extract scenario name from path: any string between "/" and EOL ($) containing "-x" with x being a one or two digit number
     #scenario <- gsub(".*\\/(.*-[0-9]{1,2}$)","\\1",f)
     cfg <- NULL
     load(paste0(f,"/config.Rdata"))
     scenario <- cfg$title
-    if (!is.null(regionscode)) {
-      if(regionscode != regionscode(paste0("./",cfg$regionmapping))) {
+    if (!is.null(rcode)) {
+      if(rcode != regionscode(paste0("./",cfg$regionmapping))) {
         stop("Region codes are not the same for all runs!")
       }
     }
     # if region codes of the current and the previous run are identical (stop() above was not executed), keep current one
-    regionscode <- regionscode(paste0("./",cfg$regionmapping))
-    print(regionscode)
+    rcode <- regionscode(paste0("./",cfg$regionmapping))
+    cat("Regionscode:",rcode,"\n")
     report <- read.report(paste0(f,"/report_",scenario,".mif"),as.list=FALSE)
     report <- add_columns(report,dim=3.3,addnm="Modelstatus (-)")
     report["GLO",,"Modelstatus (-)"] <- modelstat(paste0(f,"/fulldata.gdx"))
     mag_res <- mbind(mag_res,report)
   }
   
-  attr(mag_res,"regionscode") <- regionscode
+  attr(mag_res,"regionscode") <- rcode
   
   if (!is.null(outfile)) {
     # save collected results to Rdata file
