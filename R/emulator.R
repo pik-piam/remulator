@@ -150,10 +150,14 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   # after all values have been transferred: keep only valid values in "fitted" by replacing invalide values with NA
   filtered[,,"fitted"][dupli|infes|outly] <- NA
 
+  ########################################################
+  #################### save data #########################
+  ########################################################
+  
   for (scen in getNames(filtered,dim="scenario")) {
     path_data <- file.path(output_path,scen)
     ifelse(!dir.exists(path_data), dir.create(path_data), FALSE)
-    save(filtered,fitcoef,file = file.path(path_data,paste0(scen,"_postfit.rda")))
+    save(data,filtered,fitcoef,file = file.path(path_data,paste0(scen,"_postfit.rda")))
   }
   
   ########################################################
