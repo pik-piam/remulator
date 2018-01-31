@@ -26,9 +26,23 @@ mute_insufficient <- function(data,n_suff) {
   samples_count <- nonNA_count
   samples_count[nonNA_count<n_suff]=0
   
-  attr(data,"insufficient")       <- nodata
+  # create empty object
+  insufficient_data <- data + NA
+  insufficient_data[nodata] <- data[nodata]
+  
+  attr(data,"insufficient_flag")  <- nodata
   attr(data,"insufficient_count") <- insufficient_count
+  attr(data,"insufficient_data")  <- insufficient_data
   attr(data,"samples_count")      <- samples_count
-
+  
+  # set insufficient data to NA
+  nodata <- collapseNames(nodata,collapsedim = "variable")
+  nodata[nodata]  <- NA
+  nodata[!nodata] <- 1
+  tmp <- data*nodata
+  
+  # to keep attributes of "data" (have been erased in "tmp" by multiplication above)
+  data[,,] <- tmp
+  
   return(data)
 }

@@ -74,16 +74,16 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   ########################################################
   
   # Filter data before fitting: set infeasible, duplicated, and outlier data to NA
-
+  
   # save raw data before filtering for plotting later
   raw <- data
-
+  
   # set data in infeasible years and in subsequent years to NA 
   cat("Removing data of infeasible years.\n")
-  data <- mute_infes(data = data, name="modelstat", infeasible = treat_as_infes)
+  data <- mute_infes(data, name="modelstat", infeasible = treat_as_infes)
   
   # get magpie object marking infeasible years (only for plotting below)
-  infes <- attributes(data)$infeasible
+  infes <- attributes(data)$infeasible_flag
   
   # set duplicated samples to NA
   cat("Removing duplicates.\n")
@@ -96,11 +96,14 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   # Set insufficient data points to NA
   cat("Checking if number of remaining data points is sufficient (>=",n_suff,").\n")
   data <- mute_insufficient(data,n_suff)
+  
+  # save data before fill_missing_years for plottting
+  data_before_fillling <- data
 
   # If in current year not enough data is availalbe (TRUE in nodata) copy it from other years
   if(fill) {
     cat("Copy data to years with unsufficient number of data points.\n")
-    nodata <- attributes(data)$insufficient
+    nodata <- attributes(data)$insufficient_flag
     data <- fill_missing_years(data,nodata)
   }
   
@@ -134,22 +137,16 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   # outliers) in one MAgPIE object that will be used for plotting.
   cat("Gathering data for plotting.\n")
   
-  # fetch attributes from data (TURE/FALSE flags)
-  dupli <- attributes(data)$duplicated
-  outly <- !is.na(attributes(data)$outliers) & attributes(data)$outliers # convert NA to FALSE, keep TRUE
-  infes <- new.magpie(getRegions(dupli),getYears(dupli),getNames(dupli),fill = FALSE) # to have all regions not only GLO
-  infes[,,] <- attributes(data)$infeasible
-  
   # separate raw data into different columns of filtered
-  filtered <- add_dimension(raw, dim=3.4,add="type",nm="fitted")
-  filtered <- add_columns(filtered,dim=3.4,addnm = c("duplicated","infeasible","outliers"))
-  filtered[,,"duplicated"][dupli] <- filtered[,,"fitted"][dupli]
-  filtered[,,"infeasible"][infes] <- filtered[,,"fitted"][infes]
-  filtered[,,"outliers"][outly]   <- filtered[,,"fitted"][outly]
+  filtered <- add_dimension(raw, dim=3.4,add="type",nm="raw")
+  filtered <- add_columns(filtered,dim=3.4,addnm = c("fitted","duplicated","infeasible","outliers","insufficient","copied"))
+  filtered[,,"fitted"]       <- data_before_fillling
+  filtered[,,"duplicated"]   <- attributes(data)$duplicated_data
+  filtered[,,"infeasible"]   <- attributes(data)$infeasible_data
+  filtered[,,"outliers"]     <- attributes(data)$outliers_data
+  filtered[,,"insufficient"] <- attributes(data)$insufficient_data
+  if (!is.null(attributes(data)$copied_data)) filtered[,,"copied"] <- attributes(data)$copied_data
   
-  # after all values have been transferred: keep only valid values in "fitted" by replacing invalide values with NA
-  filtered[,,"fitted"][dupli|infes|outly] <- NA
-
   ########################################################
   #################### save data #########################
   ########################################################
@@ -165,7 +162,7 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   ########################################################
   
   cat("Plotting supplycurve.\n")
-  plot_curve(filtered,supplycurve_commonY,supplycurve_indiviY,infes["GLO",,],output_path,create_pdf)
+  plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes["GLO",,],output_path,create_pdf)
   
   return(fitcoef)
 }

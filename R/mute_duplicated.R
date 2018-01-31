@@ -20,13 +20,20 @@ mute_duplicated <- function(data) {
   
   dupli <- as.magpie(dupli)
   
+  # create empty object
+  dupli_data <- data + NA
+  # pick duplicated data points
+  dupli_data[dupli] <- data[dupli]
+
   # find number of TRUE elements
   dupli_count <- as.magpie(apply(unwrap(dupli),c(1,2,3),sum))
   # Attach dupli (TRUE/FALSE) as attribute to data before TRUE/FALSE are changed to 1/0
-  attr(data,"duplicated") <- dupli
-  # Attach infes_count as attribute to data
+  attr(data,"duplicated_flag") <- dupli
+  # Attach dupli_count as attribute to data
   attr(data,"duplicated_count") <- dupli_count
-
+  # Attach dupli_data as attribute to data
+  attr(data,"duplicated_data") <- dupli_data
+  
   dupli[dupli] <- NA # duplicated values: TRUE  -> NA
   dupli[!dupli] <- 1 # unique values    : FALSE -> 1
   

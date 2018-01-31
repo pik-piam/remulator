@@ -44,6 +44,12 @@ mute_outliers <- function(data,range=1.5) {
   }
   
   a <- unwrap(data)
+  
+  # code for debugging
+  # dat <- a["NAM","y2005",,,c("x","y")]
+  # plot(dat)
+  # mm <- lm(dat[,"y"]~dat[,"x"])
+  # abline(mm)
 
   tmp <- apply(a[,,,,c("x","y"),drop=FALSE],c(1,2,3),.outliers,range)
 
@@ -55,7 +61,7 @@ mute_outliers <- function(data,range=1.5) {
   outliers_index <- apply(tmp,c(1,2,3),pick,2)
 
   
-  #data_outliers <- data + NA
+  data_outliers <- data + NA
   # create MAgPIE object 'outliers' of the same shape as 'data' and initialize with FALSE
   outliers <- collapseNames(data[,,"x"],collapsedim = "variable") # remove variable only, keep scenario
   outliers[,,] <- FALSE
@@ -66,7 +72,7 @@ mute_outliers <- function(data,range=1.5) {
         if(!is.na(outliers_index[r,y,s])) {
           idx <- unlist(outliers_index[r,y,s])
           # copy outliers from data to data_outliers
-          #data_outliers[r,y,s][,,idx] <- data[r,y,s][,,idx]
+          data_outliers[r,y,s][,,idx] <- data[r,y,s][,,idx]
           # clear outliers in data
           data[r,y,s][,,idx] <- NA
           outliers[r,y,s][,,idx] <- TRUE
@@ -78,9 +84,9 @@ mute_outliers <- function(data,range=1.5) {
     }
   }
   
-  attr(data,"outliers") <- outliers==1 # for some reason the TRUE/FALSE from above are translated into 1/0 -> make it TRUE/FALSE again
+  attr(data,"outliers_flag")  <- outliers==1 # for some reason the TRUE/FALSE from above are translated into 1/0 -> make it TRUE/FALSE again
   attr(data,"outliers_count") <- as.magpie(outliers_count)
-  #attr(data,"outliers_data")  <- data_outliers
+  attr(data,"outliers_data")  <- data_outliers
   
   return(data)
 }

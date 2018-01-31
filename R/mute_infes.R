@@ -22,7 +22,7 @@ mute_infes <- function(data,name="Modelstatus (-)",infeasible=5) {
   # mark infesible years of scenarios with TRUE
   infes <- FALSE
   for (i in infeasible) {
-    tmp <- data["GLO",,name]==i
+    tmp <- data[,,name]==i
     infes <- tmp | infes
   }
   
@@ -37,9 +37,6 @@ mute_infes <- function(data,name="Modelstatus (-)",infeasible=5) {
   # multiplying keeps only feasible years and sets infeasible years to NA
   tmp <- data*infes
   
-  # to keep attributes (have been erased by multiplication above)
-  data[,,] <- tmp
-  
   # convert back to TRUE/FALSE: infeasible = NA -> TRUE. feasible != NA -> FALSE
   infes <- as.magpie(is.na(infes))
 
@@ -47,10 +44,23 @@ mute_infes <- function(data,name="Modelstatus (-)",infeasible=5) {
   infes_count <- new.magpie(getRegions(data),getYears(data),getNames(data,dim="scenario"))
   infes_count[,,] <- as.magpie(apply(unwrap(infes),c(1,2,3),sum))
   
+  infes <- collapseNames(as.magpie(infes), collapsedim = "variable") # keep the scenario even if it's only one
+  
+  # create empty object
+  infeasible_data <- data + NA
+  # pick infeasible data points
+  infeasible_data[infes] <- data[infes]
+  
+  # Overwrite raw data with feasible data.
+  # Use [,,] to keep attributes of "data" (have been erased in "tmp" by multiplication above).
+  data[,,] <- tmp
+
   # Attach infes (TRUE/FALSE) as attribute to data before TRUE/FALSE are changed to 1/0
-  attr(data,"infeasible") <- collapseNames(as.magpie(infes), collapsedim = "variable") # keep the scenario even if it's only one
+  attr(data,"infeasible_flag") <- infes
   # Attach infes_count as attribute to data
   attr(data,"infeasible_count") <- infes_count
+  # Attach data points that are considered infeasible
+  attr(data,"infeasible_data") <- infeasible_data
 
   return(data)
 }

@@ -12,10 +12,12 @@
 fill_missing_years <- function(fitcoef, nodata, method=1) {
 
   if (method == 1) {
-    # Rule: for each region: take fit from the next available year, if there is no fit in any
-    # of the next years, take it from the year before
-    #nodata <- (collapseNames(fitcoef[,,"b"],collapsedim="coeff"))==0
-    takenfrom <- nodata + NA # create empty object
+    # Rule: for each region: take fit from the next available year, if there
+    # is no fit in any of the next years, take it from the year before
+    
+    data_copied <- fitcoef + NA # create empty object
+    takenfrom   <- nodata  + NA # create empty object
+    
     for (s in getNames(fitcoef,dim=1)) {
       for (r in getRegions(fitcoef)) {
         # There is no fit for any year
@@ -26,6 +28,7 @@ fill_missing_years <- function(fitcoef, nodata, method=1) {
           for (y in (length(getYears(fitcoef))-1):1) {
             if (nodata[r,y,s]) {
               fitcoef[r,y,s] <- setYears(fitcoef[r,y+1,s])
+              data_copied[r,y,s] <- setYears(fitcoef[r,y+1,s])
               nodata[r,y,s] <- FALSE # update nodata so that step 2. (below) will not overwrite values that have already been replaced here
               takenfrom[r,y,s] <- getYears(fitcoef[,y+1,])
             }
@@ -34,6 +37,7 @@ fill_missing_years <- function(fitcoef, nodata, method=1) {
           for (y in 2:length(getYears(fitcoef))) {
             if (nodata[r,y,s]) {
               fitcoef[r,y,s] <- setYears(fitcoef[r,y-1,s])
+              data_copied[r,y,s] <- setYears(fitcoef[r,y-1,s])
               #nodata[r,y,s] <- FALSE # updata nodata for a consistent reporting of what has changed
               takenfrom[r,y,s] <- getYears(fitcoef[,y-1,])
             }
@@ -42,7 +46,8 @@ fill_missing_years <- function(fitcoef, nodata, method=1) {
       }
     }
     # Add takenfrom as attribute to fitcoef
-    attr(fitcoef,"takenfrom") <- takenfrom
+    attr(fitcoef,"takenfrom")   <- takenfrom
+    attr(fitcoef,"copied_data") <- data_copied
     
   } else {
     stop("Unknown method")
