@@ -6,13 +6,20 @@
 #' @param name_x Name of the variable in \code{data} that will be treated as x in the fit
 #' @param name_y Name of the variable in \code{data} that will be treated as y in the fit
 #' @param name_modelstat Name of the variable that contains the modelstatus
-#' @param treat_as_infes GAMS model status codes that will be regarded infeasible. See \url{https://www.gams.com/24.8/docs/userguides/mccarl/modelstat_tmodstat.htm}
+#' @param treat_as_infes GAMS model status codes that will be regarded infeasible. 
+#' See \url{https://www.gams.com/24.8/docs/userguides/mccarl/modelstat_tmodstat.htm}
 #' @param userfun Function to fit. User can provide a functional form using the following 
 #' syntax: \code{function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])}. This function is the default.
 #' @param initial_values Vector with initial values of the fit coefficients.
-#' @param n_suff Minial number (default=1) of data points in a specific year and region that will be regarded as sufficient to perform a fit.
+#' @param outlier_range Before the actual fit a linear pre-fit is performed. Based on their distance to this 
+#' pre-fit the data points are allocated to quartiles. A data point is considered an outlier if it is more 
+#' than \code{outlier_range} times of the interquartile range away from the the upper or lower end of the 
+#' interquartile range \url{http://colingorrie.github.io/outlier-detection.html}.
+#' @param n_suff Minial number (default=1) of data points in a specific year and region that 
+#' will be regarded as sufficient to perform a fit.
 #' If the number of available data points is less no fit will be generated for this year and region.
-#' @param fill Logical (default=FALSE) indicating whether data will be copied from subsequent year if in the current year not enough data points are avaialbe.
+#' @param fill Logical (default=FALSE) indicating whether data will be copied from subsequent year if in the 
+#' current year not enough data points are avaialbe.
 #' @param output_path Path to save the output to
 #' @param create_pdf Logical indicating whether a pdf should be produced that compiles all figures.
 #' @param ... Arguments passed on to the \code{optim} function in \code{calcualte_fit}. Useful to define bounds on fit coefficients.
@@ -21,7 +28,7 @@
 #' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames new.magpie
 #' @export
 
-emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
+emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),outlier_range=1.5,n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
   
   ########################################################
   ################ structure data ########################
@@ -91,7 +98,7 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
 
   # Find outliers and set them to NA
   cat("Removing outliers.\n")
-  data <- mute_outliers(data,range=1.5)
+  data <- mute_outliers(data,range=outlier_range)
   
   # Set insufficient data points to NA
   cat("Checking if number of remaining data points is sufficient (>=",n_suff,").\n")

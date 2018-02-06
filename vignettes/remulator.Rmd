@@ -49,7 +49,7 @@ When calling the `emulator()` funtion you need to provide
 * the name of the variables (present in your data) that will be treated as `x` and `y` in the fit, and 
 * the name of the variable that holds the model status. 
 
-There are more arguments to the `emulator()` function, all of which have defaults (plese see `?emulator`). All results will be saved to `output_path` (which is "emulator" by default). Optionally you can pass further arguments to the `optim()` function, such as lower or upper bounds on the fit coefficients. The `emulator()` function performs the following steps:
+There are more arguments to the `emulator()` function, all of which have defaults (please see `?emulator`). All results will be saved to `output_path` (which is "emulator" by default). Optionally you can pass further arguments to the `optim()` function, such as lower or upper bounds on the fit coefficients. The `emulator()` function performs the following steps:
 
 * it sorts out data of infeasible years and all years following an infeasible year
 * for each region and each year it fits a curve of the form `y = a + b * x ^c`, where `x` and `y` are the data you provide and `a`,`b`, and `c` are the coefficients the `emulator()` function will calculate using the `optim()` function from R's stats package
@@ -121,17 +121,16 @@ A linear fit would look like
 beautiful_shape <- function(param,x)return(param[[1]] + param[[2]] * x)
 ```
 
-Then pass your function to the `emulator()` function. NOTE: If you provide your own function you need to provide an initial value for each of the fit coefficients!
+Then pass your function to the `emulator()` function. NOTE: If you provide your own function you need to provide an initial value for each of the fit coefficients using the parameter `initial_values`, in this case with two parameters  `initial_values=c(0,1)`!
 
 ```{r, echo = TRUE, eval=FALSE}
-
 emulator(data=emudata,
          name_x="Primary Energy|Biomass|Energy Crops (EJ/yr)",
          name_y="Price|Primary Energy|Biomass (US$2005/GJ)",
          name_modelstat="Modelstatus (-)",
          treat_as_infes = c(5,7),
          userfun=beautiful_shape,
-         initial_values=c(0,1)
+         initial_values=c(0,1),
          output_path = "multi_case",
          lower=c(0,0))
 ```

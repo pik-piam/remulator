@@ -32,7 +32,8 @@ read_and_combine <- function(list_of_directories, outfile=NULL) {
     }
     # if region codes of the current and the previous run are identical (stop() above was not executed), keep current one
     rcode <- regionscode(paste0("./",cfg$regionmapping))
-    cat("Regionscode:",rcode,"\n")
+    #cat("Regionscode:",rcode,"\n")
+    cat("Reading:",paste0(f,"/report_",scenario,".mif"),"\n")
     report <- read.report(paste0(f,"/report_",scenario,".mif"),as.list=FALSE)
     report <- add_columns(report,dim=3.3,addnm="Modelstatus (-)")
     report["GLO",,"Modelstatus (-)"] <- modelstat(paste0(f,"/fulldata.gdx"))
