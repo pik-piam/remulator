@@ -25,6 +25,7 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
   for (scen in getNames(supplycurve_commonY,dim=1)) {
     path_plots <- file.path(emu_path,scen)
     ifelse(!dir.exists(path_plots), dir.create(path_plots), FALSE)
+    cat("Saving plots to",path_plots,"\n")
     outfile <- file.path(emu_path,paste0(scen,"_emulator.pdf"))
     
     if(create_pdf) {
@@ -150,6 +151,7 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
     if (create_pdf) {
       swtable(sw, infes)
       # delete temporary files created by knitr
+      cat("Printing pdf to",outfile,"\n")
       swclose(sw)
       unlink(c(paste0(emu_path,"/figure"),
                paste0(emu_path,"/",scen,"_emulator.log"),

@@ -8,23 +8,26 @@
 #' 
 #' @param data MAgPIE object containing the results of a MAgPIE run and the modelstatus.
 #' @param name String providing the name of the variable that holds the modelstatus.
-#' @param infeasible Integer vector defining which modelstatus will be treated as infeasible.
+#' @param feasible Integer vector defining which modelstatus will be treated as feasible.
 #' @return Magpie object with either filtered model data or the modelstatus.
 #' @author David Klein
 #' @importFrom magclass collapseNames as.magpie new.magpie
 
-mute_infes <- function(data,name="Modelstatus (-)",infeasible=5) {
+mute_infes <- function(data,name="Modelstatus (-)",feasible=2) {
   
   ##########################################################################
   ##### D A T A: set infeasible years and their successors to NA ###########
   ##########################################################################
   
   # mark infesible years of scenarios with TRUE
-  infes <- FALSE
-  for (i in infeasible) {
+  fes <- FALSE
+  for (i in feasible) {
     tmp <- data[,,name]==i
-    infes <- tmp | infes
+    fes <- tmp | fes
   }
+  
+  # invert feasible
+  infes <- !fes
   
   # set infeasible years to NA
   infes[infes]  <- NA

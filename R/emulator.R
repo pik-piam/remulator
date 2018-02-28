@@ -6,7 +6,7 @@
 #' @param name_x Name of the variable in \code{data} that will be treated as x in the fit
 #' @param name_y Name of the variable in \code{data} that will be treated as y in the fit
 #' @param name_modelstat Name of the variable that contains the modelstatus
-#' @param treat_as_infes GAMS model status codes that will be regarded infeasible. 
+#' @param treat_as_feasible GAMS model status codes that will be regarded feasible. 
 #' See \url{https://www.gams.com/24.8/docs/userguides/mccarl/modelstat_tmodstat.htm}
 #' @param userfun Function to fit. User can provide a functional form using the following 
 #' syntax: \code{function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]])}. This function is the default.
@@ -28,7 +28,7 @@
 #' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames new.magpie
 #' @export
 
-emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),outlier_range=1.5,n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
+emulator <- function(data,name_x,name_y,name_modelstat,treat_as_feasible=c(2,7),userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),outlier_range=1.5,n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
   
   ########################################################
   ################ structure data ########################
@@ -87,7 +87,7 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   
   # set data in infeasible years and in subsequent years to NA 
   cat("Removing data of infeasible years.\n")
-  data <- mute_infes(data, name="modelstat", infeasible = treat_as_infes)
+  data <- mute_infes(data, name="modelstat", feasible = treat_as_feasible)
   
   # get magpie object marking infeasible years (only for plotting below)
   infes <- attributes(data)$infeasible_flag
@@ -161,6 +161,7 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_infes=5,userfun=
   for (scen in getNames(filtered,dim="scenario")) {
     path_data <- file.path(output_path,scen)
     ifelse(!dir.exists(path_data), dir.create(path_data), FALSE)
+    cat("Saving data to",file.path(path_data,paste0(scen,"_postfit.rda")),"\n")
     save(data,filtered,fitcoef,file = file.path(path_data,paste0(scen,"_postfit.rda")))
   }
   
