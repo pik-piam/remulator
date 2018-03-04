@@ -63,7 +63,7 @@ mute_infes <- function(data,name="Modelstatus (-)",feasible=2) {
   # Attach infes_count as attribute to data
   attr(data,"infeasible_count") <- infes_count
   # Attach data points that are considered infeasible
-  attr(data,"infeasible_data") <- infeasible_data
+  attr(data,"infeasible_data") <- infeasible_data[,,name,invert=TRUE]
 
   return(data)
 }

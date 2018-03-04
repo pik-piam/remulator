@@ -28,7 +28,7 @@
 #' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames new.magpie
 #' @export
 
-emulator <- function(data,name_x,name_y,name_modelstat,treat_as_feasible=c(2,7),userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),outlier_range=1.5,n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
+emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(2,7),userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),outlier_range=1.5,n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
   
   ########################################################
   ################ structure data ########################
@@ -64,12 +64,19 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_feasible=c(2,7),
     stop("Input data has to have the following sets: either\n",sets_ready_to_use,"\n or\n",sets_for_single_scenario,"\n but has\n",getSets(data))
   }
 
-  # pick variables as provided by user
-  data <- data[,,c(name_x,name_y,name_modelstat)]
-  
-  # rename variables to generic short names
-  getNames(data,dim="variable") <- c("x","y","modelstat")
-  
+  if (!is.null(name_modelstat)) {
+    # append modelstat if it exists
+    # pick variables as provided by user
+    if(!name_modelstat %in% getNames(data, dim="variable")) stop("Could not find any variable with the name ",name_modelstat," you provided in name_modelstat in your data!")
+    data <- data[,,c(name_x,name_y,name_modelstat)]
+    # rename variables to generic short names
+    getNames(data,dim="variable") <- c("x","y","modelstat")
+  } else {
+    # rename variables to generic short names
+    data <- data[,,c(name_x,name_y)]
+    getNames(data,dim="variable") <- c("x","y")
+  }
+
   # remove model dimension
   if ("model" %in% getSets(data)) {
     if (length(getNames(data,dim="model"))>1) stop("Data must contain only ONE model not ",length(getNames(data,dim="model")))
@@ -85,10 +92,23 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_feasible=c(2,7),
   # save raw data before filtering for plotting later
   raw <- data
   
-  # set data in infeasible years and in subsequent years to NA 
-  cat("Removing data of infeasible years.\n")
-  data <- mute_infes(data, name="modelstat", feasible = treat_as_feasible)
-  
+  # set data in infeasible years and in subsequent years to NA
+  if (!is.null(name_modelstat)) {
+    cat("Removing data of infeasible years.\n")
+    data <- mute_infes(data, name="modelstat", feasible = treat_as_feasible)
+    # remove modelstat because it is not needed anymore and allows proceeding from 
+    # here on the same way regardless of whether modelstat existed before or not
+    data <- data[,,"modelstat",invert=TRUE]
+    raw  <-  raw[,,"modelstat",invert=TRUE]
+    
+  } else {
+    attr(data,"infeasible_flag")  <- NA
+    # Attach infes_count as attribute to data
+    attr(data,"infeasible_count") <- NA
+    # Attach data points that are considered infeasible
+    attr(data,"infeasible_data")  <- NA
+  }
+
   # get magpie object marking infeasible years (only for plotting below)
   infes <- attributes(data)$infeasible_flag
   
@@ -119,7 +139,7 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_feasible=c(2,7),
   ########################################################
   
   cat("Calculating fit coefficients.\n")
-  fitcoef <- calculate_fit(data["GLO",,"modelstat",invert=TRUE],form =userfun,initial_values = initial_values,...)
+  fitcoef <- calculate_fit(data["GLO",,,invert=TRUE],form =userfun,initial_values = initial_values,...)
   
   # attach information "takenfrom" (originally created by fill_missing_years) to fitcoef (since it is the return value of this function)
   if (fill) attr(fitcoef,"inputtakenfrom") <- attr(data,"takenfrom")
@@ -170,7 +190,7 @@ emulator <- function(data,name_x,name_y,name_modelstat,treat_as_feasible=c(2,7),
   ########################################################
   
   cat("Plotting supplycurve.\n")
-  plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes["GLO",,],output_path,create_pdf)
+  plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes,output_path,create_pdf)
   
   return(fitcoef)
 }
