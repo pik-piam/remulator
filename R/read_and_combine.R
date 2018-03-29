@@ -25,16 +25,16 @@ read_and_combine <- function(list_of_directories, outfile=NULL) {
     cfg <- NULL
     load(paste0(f,"/config.Rdata"))
     scenario <- cfg$title
-    if (!is.null(rcode)) {
-      if(rcode != regionscode(paste0("./",cfg$regionmapping))) {
-        stop("Region codes are not the same for all runs!")
-      }
-    }
+    #if (!is.null(rcode)) {
+    #  if(rcode != regionscode(paste0("./",cfg$regionmapping))) {
+    #    stop("Region codes are not the same for all runs!")
+    #  }
+    #}
     # if region codes of the current and the previous run are identical (stop() above was not executed), keep current one
-    rcode <- regionscode(paste0("./",cfg$regionmapping))
+    rcode <- "no_regionscode_available" # regionscode(paste0("./",cfg$regionmapping))
     #cat("Regionscode:",rcode,"\n")
-    cat("Reading:",paste0(f,"/report_",scenario,".mif"),"\n")
-    report <- read.report(paste0(f,"/report_",scenario,".mif"),as.list=FALSE)
+    cat("Reading:",paste0(f,"/report.mif"),"\n")
+    report <- read.report(paste0(f,"/report.mif"),as.list=FALSE)
     report <- add_columns(report,dim=3.3,addnm="Modelstatus (-)")
     report["GLO",,"Modelstatus (-)"] <- modelstat(paste0(f,"/fulldata.gdx"))
     mag_res <- mbind(mag_res,report)
