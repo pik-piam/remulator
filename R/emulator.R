@@ -181,8 +181,9 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
   for (scen in getNames(filtered,dim="scenario")) {
     path_data <- file.path(output_path,scen)
     ifelse(!dir.exists(path_data), dir.create(path_data), FALSE)
-    cat("Saving data to",file.path(path_data,paste0(scen,"_postfit.rda")),"\n")
-    save(data,filtered,fitcoef,file = file.path(path_data,paste0(scen,"_postfit.rda")))
+    f <- file.path(path_data,paste0("data_postfit_",scen,".rda"))
+    cat("Saving data to",f,"\n")
+    save(data,filtered,fitcoef,file = f)
   }
   
   ########################################################

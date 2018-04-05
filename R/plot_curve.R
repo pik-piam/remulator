@@ -50,7 +50,7 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
 
     #==== P L O T: infeasible years ====
     if (any(!is.na(infes))) {
-      if (create_pdf) swlatex(sw,"\\section{Modelstat}")
+      if (create_pdf) swlatex(sw,"\\newpage\\null\\thispagestyle{empty}\\newpage \\section{Modelstat}")
       
       # heatmap(i, Colv = NA, Rowv = NA,col=c("#df2424", "#4cce0f"))
       dat <- as.ggplot(infes["GLO",,scen])
@@ -60,11 +60,12 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
         scale_x_discrete(expand = c(0, 0)) + scale_y_discrete(expand = c(0,0)) + theme_bw(base_size = 6) + theme(legend.position="none")
       ggsave(filename = file.path(path_plots,paste0("modelstat-",scen,".png")),plot=modelstat,width=6,height=3)
       if (create_pdf) swfigure(sw,print,modelstat)
+      
     }
     
     #==== P L O T: raw data ====
     
-    if (create_pdf) swlatex(sw,"\\section{Raw data of feasible runs}")
+    if (create_pdf) swlatex(sw,"\\section{Raw data}")
     dat <- na.omit(gginput(raw[,,scen]["GLO",,,invert=TRUE],scatter = "variable",verbose = FALSE))
     scatter_raw <- ggplot(dat, aes_string(x=".value.x",y=".value.y",color="type")) + geom_point(size=0.3) +
       theme_minimal(base_size = 6) + facet_grid(.temp1~.spat1 ,scales = "fixed") + labs(y ="$/GJ", x = "EJ")
@@ -73,7 +74,7 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
     
     #==== Overviewplot Supplycurves 1/2 ====
     
-    if (create_pdf) swlatex(sw,"\\section{Supplycurve matrix}")
+    if (create_pdf) swlatex(sw,"\\section{Fits based on filtered data}")
     dat <- gginput(supplycurve_commonY[,,scen], scatter = "type",verbose = FALSE)
     p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) +
       geom_point(data=gginput(raw["GLO",,,invert=TRUE][,,scen][,,"fitted"],scatter = "variable",verbose = FALSE),aes_string(x=".value.x",y=".value.y"),size=0.3) +
@@ -88,7 +89,7 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
     color_years <- colorRampPalette(c("blue", "yellow", "red"))(length(getYears(raw)))
     names(color_years) <- gsub("y","",getYears(raw))
     
-    if (create_pdf) swlatex(sw,"\\section{Supplycurve all years}")
+    if (create_pdf) swlatex(sw,"\\section{Supplycurve all years (free axes)}")
     dat <- gginput(supplycurve_commonY[,,scen], scatter = "type",verbose = FALSE)
     dat$year <- as.character(dat$year)
     dat_scatter <- gginput(raw["GLO",,,invert=TRUE][,,scen][,,"fitted"],scatter = "variable",verbose = FALSE)
@@ -101,6 +102,7 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
     if (create_pdf) swfigure(sw,print,p,fig.width=1)
     
     # the same but with fixed scales
+    if (create_pdf) swlatex(sw,"\\section{Supplycurve all years (fixed axes)}")
     p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + 
       geom_point(data=dat_scatter,aes_string(x=".value.x",y=".value.y",color="year"),size=1) +
       geom_line(aes_string(colour="year")) + facet_wrap(~.spat1 ,scales = "fixed") + theme_gray(base_size = 6) +
@@ -152,7 +154,7 @@ plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu
     if (create_pdf) {
       # delete temporary files created by knitr
       cat("Printing pdf to",outfile,"\n")
-      swclose(sw)
+      swclose(sw,clean_output = TRUE)
       unlink(c(paste0(emu_path,"/figure"),
                paste0(emu_path,"/",scen,"_emulator.log"),
                paste0(emu_path,"/",scen,"_emulator.rda")),recursive=TRUE, force=TRUE)
