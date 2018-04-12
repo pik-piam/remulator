@@ -12,5 +12,6 @@ emulator_runs_complete <- function(list_of_directories,runnumbers=1:73) {
   numbers <- gsub(".*-([0-9]{1,2}$)","\\1",list_of_directories)
   # Set of given runs is complete if all numbers extracted from the directory names are in the sequence given below
   check <- setequal(numbers,as.character(runnumbers))
+  if(!check) cat("Missing runs:",setdiff(as.character(runnumbers),numbers),"\n")
   return(check)
 }

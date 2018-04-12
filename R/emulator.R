@@ -30,6 +30,8 @@
 
 emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(2,7),userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),outlier_range=1.5,n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
   
+  cat("Starting generation of emulator.\n")
+  
   ########################################################
   ################ structure data ########################
   ########################################################
@@ -181,7 +183,7 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
   for (scen in getNames(filtered,dim="scenario")) {
     path_data <- file.path(output_path,scen)
     ifelse(!dir.exists(path_data), dir.create(path_data), FALSE)
-    f <- file.path(path_data,paste0("data_postfit_",scen,".rda"))
+    f <- file.path(path_data,paste0("data_postfit_",scen,".Rdata"))
     cat("Saving data to",f,"\n")
     save(data,filtered,fitcoef,file = f)
   }
