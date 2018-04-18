@@ -14,6 +14,7 @@
 #' @author David Klein
 #' @seealso \code{\link{calculate_fit}} \code{\link{plot_curve}}
 #' @importFrom magclass unwrap as.magpie getSets setNames collapseNames add_dimension mbind getSets<- ndata clean_magpie
+#' @export
 
 calc_supplycurve <- function(data_in,fitcoef,myform,ylimit="common") {
   
@@ -26,12 +27,21 @@ calc_supplycurve <- function(data_in,fitcoef,myform,ylimit="common") {
   # convert MAgPIE object into matrix
   data_in <- unwrap(data_in)
   
+  if (ylimit == "individual") {
+    data <- data_in[,,,,,drop=FALSE] # do not select a particular scenario -> max across all scenarios
+    # Find greatest raw data in each year and region.
+    prod_max <- apply(data,c(1,2,5),max,na.rm=TRUE)
+    # silly back and forth conversion to drop only variable but not scenario. Keeping it  
+    # an array would drop both because both dimensions have only one element.
+    prod_max <- unwrap(collapseNames(as.magpie(prod_max)[,,"x"],collapsedim = "variable"))
+    prod_max[is.infinite(prod_max)] <- NA
+    prod_max <- as.magpie(prod_max)
+  }
+  
   res <- NULL
   
   for (scen in dimnames(data_in)$scenario) {
-  
-    data <- data_in[,,scen,,,drop=FALSE]
-    
+
     # ###### find min/max of raw data for calculating supplycurve within this regional range ######
     # limits <- apply(data,c(1,2,3,5),range,na.rm=TRUE)
     # 
@@ -48,16 +58,14 @@ calc_supplycurve <- function(data_in,fitcoef,myform,ylimit="common") {
   
     if (ylimit == "individual") {
       
-      # Find greatest raw data in each year and region.
-      prod_max <- apply(data,c(1,2,3,5),max,na.rm=TRUE)
-      # silly back and forth conversion to drop only variable but not scenario. Keeping it  
-      # an array would drop both because both dimensions have only one element.
-      prod_max <- unwrap(collapseNames(as.magpie(prod_max)[,,"x"],collapsedim = "variable"))
-      prod_max[is.infinite(prod_max)] <- NA
-      prod_max <- as.magpie(prod_max)
-  
+      # although prod_max has no scenario dimension (since maxima have been determined across scenarios) provide scenario name here
+      # to make it work further down (names of prod_max are used for output (pri and dem) and output needs scenario names)
+      getNames(prod_max) <- scen
+
     } else {
   
+      data <- data_in[,,scen,,,drop=FALSE] # select a particular scenario -> max for a particular scenario
+      
       max_glo <- as.magpie(apply(data,c(3,5),max,na.rm=TRUE))
   
       # For a nicer plot: expand supplycurves beyond the maximal demand of the respective region and year.
@@ -113,7 +121,7 @@ calc_supplycurve <- function(data_in,fitcoef,myform,ylimit="common") {
     # pri has messy names due to the multiplication with param. Bring it to the same structure as dem
     getNames(pri) <- getNames(dem) # take names from dem (has two dimension less than pri)
     pri <- clean_magpie(pri)       # remove obsolete dimensions
-    getSets(pri) <- getSets(dem)   # rename dimensions
+    #getSets(pri) <- getSets(dem)   # rename dimensions
     
     dem <- add_dimension(dem,dim=3.3, add="type",nm="x")
     pri <- add_dimension(pri,dim=3.3, add="type",nm="y")
