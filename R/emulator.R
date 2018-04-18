@@ -185,7 +185,7 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
     ifelse(!dir.exists(path_data), dir.create(path_data), FALSE)
     f <- file.path(path_data,paste0("data_postfit_",scen,".Rdata"))
     cat("Saving data to",f,"\n")
-    save(data,filtered,fitcoef,file = f)
+    save(data,filtered,fitcoef,userfun,file = f)
   }
   
   ########################################################

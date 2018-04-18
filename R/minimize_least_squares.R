@@ -49,17 +49,16 @@ minimize_least_squares <- function(dat,initial_values,userform,...){
   }, error = function(err) {
     
     print(paste("FIT ERROR:  ",err))
-    res <- list(coefficients = rep(NA,length(initial_values)), message = err$message)
+    res <- list(coefficients = rep(NA,length(initial_values)), message = paste("ERROR:",err$message))
     return(res)
     
   }, warning = function(war) {
     
     print(paste("FIT WARNING:  ",war))
-    res <- list(coefficients = rep(NA,length(initial_values)), message = war$message)
+    res <- list(coefficients = rep(NA,length(initial_values)), message = paste("WARN:",war$message))
     return(res)
   }
   )
   
   return(out)
 }
-  

@@ -21,6 +21,7 @@ read_and_combine <- function(list_of_directories, outfile=NULL) {
   regionscode_previous <- NULL
   
   for (f in list_of_directories) {
+    cat("Reading data from:",f,"\n")
     # extract scenario name from path: any string between "/" and EOL ($) containing "-x" with x being a one or two digit number
     #scenario <- gsub(".*\\/(.*-[0-9]{1,2}$)","\\1",f)
     cfg <- NULL
@@ -39,8 +40,7 @@ read_and_combine <- function(list_of_directories, outfile=NULL) {
     regionscode_previous <- regionscode_current
     
     # if region codes of the current and the previous run are identical (stop() above was not executed), keep current one
-    cat("Regionscode:",regionscode_current,"\n")
-    cat("Reading:",paste0(f,"/report.mif"),"\n")
+    #cat("Regionscode:",regionscode_current,"\n")
     modelstat <- modelstat(paste0(f,"/fulldata.gdx"))
     report <- read.report(paste0(f,"/report.mif"),as.list=FALSE)
     # if MAgPIE was infeasible in a year the report misses all subsequent years. Thus, the report has less years than 
