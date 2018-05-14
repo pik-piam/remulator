@@ -2,11 +2,11 @@
 #' 
 #' This function calculates supplycurves of multiple scenarios and plots them into one figure to compare them.
 #' 
-#' @param folders Vector giving the paths to the fitted data (usually within the 'output/emulator' folder)
+#' @param folders Vector giving the paths to the fitted data (usually within the 'output/emulator' folder), or a magpie object containing supplycurves that have alreday been calculated
 #' @param pdfname If you want the figures to be compiled in a pdf provide the name of the file here
 #' @author David Klein
 #' @seealso \code{\link{emulator}}
-#' @importFrom magclass getYears
+#' @importFrom magclass getYears is.magpie
 #' @importFrom ggplot2 ggplot ggsave aes_string facet_wrap theme_grey geom_line labs xlab ggtitle geom_point
 #' @importFrom luplot gginput
 #' @importFrom lusweave swopen swclose swfigure swlatex
@@ -22,38 +22,40 @@ plot_compare_supplycurves <- function(folders,pdfname=NULL) {
     
     if (!is.null(pdfname)) pdfname <- file.path(path_comp,pdfname)
     
-    # read and combine the results of different scenarios
-    
-    files <- paste0(folders,"/data_postfit_",folders,".Rdata")
-    
-    tmp_filtered <- NULL
-    tmp_fitcoef <- NULL
-    
-    for (f in files) {
-      load(f) # the file contains the variables "data", "filtered", "fitcoef", and "userfun"
-      tmp_filtered <- mbind(tmp_filtered,filtered)
-      tmp_fitcoef <- mbind(tmp_fitcoef,fitcoef)
+    if (!is.magpie(folders)) {
+      # read and combine the results of different scenarios
+      folders <- gsub("/$","",folders)
+      files <- paste0(folders,"/data_postfit_",folders,".Rdata")
+      
+      tmp_filtered <- NULL
+      tmp_fitcoef <- NULL
+      
+      for (f in files) {
+        cat("Loading file",f,"\n")
+        load(f) # the file contains the variables "data", "filtered", "fitcoef", and "userfun"
+        tmp_filtered <- mbind(tmp_filtered,filtered)
+        tmp_fitcoef <- mbind(tmp_fitcoef,fitcoef)
+      }
+      
+      filtered <- tmp_filtered
+      fitcoef <- tmp_fitcoef
+      
+      rm(tmp_filtered,tmp_fitcoef,files,f)
+      
+      # calculate supplycurves for all scenarios
+      
+      cat("Calculating supplycurves\n")
+      supplycurves <- calc_supplycurve(collapseNames(filtered[,,"fitted"],collapsedim = "type"),
+                                              fitcoef,myform = function(param,x)return(param[[1]] + param[[2]] * x ),
+                                              ylimit = "individual")
+      
+      f <- file.path(path_comp,"data_compare_supplycurves.Rdata")
+      cat("Saving supplycurve data to",f,"\n")
+      save(supplycurves,file = f)
     }
     
-    filtered <- tmp_filtered
-    fitcoef <- tmp_fitcoef
-    
-    rm(tmp_filtered,tmp_fitcoef,files,f)
-    
-    # calculate supplycurves for all scenarios
-    
-    supplycurves <- calc_supplycurve(collapseNames(filtered[,,"fitted"],collapsedim = "type"),
-                                            fitcoef,myform = function(param,x)return(param[[1]] + param[[2]] * x ),
-                                            ylimit = "individual")
-    
-    f <- file.path(path_comp,"data_compare_supplycurves.Rdata")
-    cat("Saving data to",f,"\n")
-    save(supplycurves,file = f)
-    
     # plot supplycurves (all regions per year)
-    
-    cat("Saving figures to folder '",path_comp,"'\n",sep="")
-    
+
     if(!is.null(pdfname)) {
       template <-  c("\\documentclass[a4paper, portrait ]{article}",
                      "\\setlength{\\parindent}{0in}",
@@ -76,7 +78,7 @@ plot_compare_supplycurves <- function(folders,pdfname=NULL) {
     }
     
     for(y in getYears(supplycurves)){
-      cat(y,"\n")
+      cat("Creating figures for ",y," and saving them to folder '",path_comp,"'\n",sep="")
       if (!is.null(pdfname)) swlatex(sw,paste0("\\subsection{",y,"}"))
       dat <- gginput(supplycurves[,y,], scatter = "type",verbose = FALSE)
       p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.spat1 ,scales = "fixed") +
@@ -91,7 +93,7 @@ plot_compare_supplycurves <- function(folders,pdfname=NULL) {
       cat("Printing pdf to",pdfname,"\n")
       swclose(sw,clean_output = TRUE)
       unlink(c(paste0(path_comp,"/figure"),
-               paste0(path_comp,"/comparison.log"),
-               paste0(path_comp,"/comparison.rda")),recursive=TRUE, force=TRUE)
+               paste0(path_comp,"/",gsub("\\.pdf$",".log",pdfname)),
+               paste0(path_comp,"/",gsub("\\.pdf$",".rda",pdfname))),recursive=TRUE, force=TRUE)
     }
 }

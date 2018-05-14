@@ -30,6 +30,13 @@ calculate_fit <- function(data,initial_values=c(1,1,1), form,...) {
   fitcoef <- apply(tmp,c(1,2,3),pick,1)
   message <- apply(tmp,c(1,2,3),pick,2)
 
+  # if there is only ONE fit coefficient there is no extra dimension for the coefficients. Thus, add a dummy dimension 
+  # so that the remainder of the script works also for a one-coefficient-fit
+  if (length(dim(fitcoef==3))) {
+    merke <- dimnames(fitcoef)
+    fitcoef <- array(fitcoef,dim=c(1,dim(fitcoef))) # add dummy dimension in the first dimension
+    dimnames(fitcoef) <- c("dummy",merke) # add dummy name (will be updated below)
+  }
   # put dimenson one (coefficients) to the end
   fitcoef <- aperm(fitcoef,c(2,3,4,1)) 
   # provide names for fit coefficients
