@@ -2,7 +2,7 @@
 #' 
 #' This function calculates supplycurves of multiple scenarios and plots them into one figure to compare them.
 #' 
-#' @param folders Vector giving the paths to the fitted data (usually within the 'output/emulator' folder), or a magpie object containing supplycurves that have alreday been calculated
+#' @param folders Vector giving the paths to the fitted data (usually within the 'output/emulator' folder)
 #' @param pdfname If you want the figures to be compiled in a pdf provide the name of the file here
 #' @author David Klein
 #' @seealso \code{\link{emulator}}
@@ -22,38 +22,36 @@ plot_compare_supplycurves <- function(folders,pdfname=NULL) {
     
     if (!is.null(pdfname)) pdfname <- file.path(path_comp,pdfname)
     
-    if (!is.magpie(folders)) {
-      # read and combine the results of different scenarios
-      folders <- gsub("/$","",folders)
-      files <- paste0(folders,"/data_postfit_",folders,".Rdata")
-      
-      tmp_filtered <- NULL
-      tmp_fitcoef <- NULL
-      
-      for (f in files) {
-        cat("Loading file",f,"\n")
-        load(f) # the file contains the variables "data", "filtered", "fitcoef", and "userfun"
-        tmp_filtered <- mbind(tmp_filtered,filtered)
-        tmp_fitcoef <- mbind(tmp_fitcoef,fitcoef)
-      }
-      
-      filtered <- tmp_filtered
-      fitcoef <- tmp_fitcoef
-      
-      rm(tmp_filtered,tmp_fitcoef,files,f)
-      
-      # calculate supplycurves for all scenarios
-      
-      cat("Calculating supplycurves\n")
-      supplycurves <- calc_supplycurve(collapseNames(filtered[,,"fitted"],collapsedim = "type"),
-                                              fitcoef,myform = function(param,x)return(param[[1]] + param[[2]] * x ),
-                                              ylimit = "individual")
-      
-      f <- file.path(path_comp,"data_compare_supplycurves.Rdata")
-      cat("Saving supplycurve data to",f,"\n")
-      save(supplycurves,file = f)
+    # read and combine the results of different scenarios
+    folders <- gsub("/$","",folders)
+    files <- paste0(folders,"/data_postfit_",folders,".Rdata")
+    
+    tmp_filtered <- NULL
+    tmp_fitcoef <- NULL
+    
+    for (f in files) {
+      cat("Loading file",f,"\n")
+      load(f) # the file contains the variables "data", "filtered", "fitcoef", and "userfun"
+      tmp_filtered <- mbind(tmp_filtered,filtered)
+      tmp_fitcoef <- mbind(tmp_fitcoef,fitcoef)
     }
     
+    filtered <- tmp_filtered
+    fitcoef <- tmp_fitcoef
+    
+    rm(tmp_filtered,tmp_fitcoef,files,f)
+    
+    # calculate supplycurves for all scenarios
+    
+    cat("Calculating supplycurves\n")
+    supplycurves <- calc_supplycurve(collapseNames(filtered[,,"fitted"],collapsedim = "type"),
+                                            fitcoef,myform = function(param,x)return(param[[1]] + param[[2]] * x ),
+                                            ylimit = "individual")
+    
+    f <- file.path(path_comp,"data_compare_supplycurves.Rdata")
+    cat("Saving supplycurve data to",f,"\n")
+    save(supplycurves,file = f)
+
     # plot supplycurves (all regions per year)
 
     if(!is.null(pdfname)) {
