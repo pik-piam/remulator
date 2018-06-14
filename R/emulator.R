@@ -55,7 +55,7 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
   if (setequal(getSets(data),sets_ready_to_use)) {
     # Data has required structure, already containing "sample" dimension (n samples for each scenario) -> ok
   } else if (setequal(getSets(data),sets_for_single_scenario)) {
-    # Data has no "sample" dimension -> all n scenarios will be lumped together to one scenario with n samples
+    cat("Data has no 'sample' dimension. All scenarios will be treated as one scenario with n samples.\n")
     # replace scenario names with numbers
     getNames(data,dim=1) <- 1:length(getNames(data,dim=1))
     # rename "scenario" dimension to "sample"
@@ -66,17 +66,18 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
     stop("Input data has to have the following sets: either\n",sets_ready_to_use,"\n or\n",sets_for_single_scenario,"\n but has\n",getSets(data))
   }
 
-  if (!is.null(name_modelstat)) {
+  cat("Selecting relevant variables only.\n")
+  if (is.null(name_modelstat)) {
+    # rename variables to generic short names
+    data <- data[,,c(name_x,name_y)]
+    getNames(data,dim="variable") <- c("x","y")
+  } else {
     # append modelstat if it exists
     # pick variables as provided by user
     if(!name_modelstat %in% getNames(data, dim="variable")) stop("Could not find any variable with the name ",name_modelstat," you provided in name_modelstat in your data!")
     data <- data[,,c(name_x,name_y,name_modelstat)]
     # rename variables to generic short names
     getNames(data,dim="variable") <- c("x","y","modelstat")
-  } else {
-    # rename variables to generic short names
-    data <- data[,,c(name_x,name_y)]
-    getNames(data,dim="variable") <- c("x","y")
   }
 
   # remove model dimension
