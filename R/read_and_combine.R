@@ -11,7 +11,7 @@
 #' @param outfile Path to an output file which the output of the function can optionally be stored to.
 #' @author David Klein
 #' @importFrom magclass read.report add_columns mbind
-#' @importFrom magpie modelstat
+#' @importFrom magpie4 modelstat
 #' @importFrom madrat regionscode
 #' @export
 
