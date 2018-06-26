@@ -6,7 +6,7 @@
 #' @param pdfname If you want the figures to be compiled in a pdf provide the name of the file here
 #' @author David Klein
 #' @seealso \code{\link{emulator}}
-#' @importFrom magclass getYears is.magpie
+#' @importFrom magclass getYears is.magpie complete_magpie
 #' @importFrom ggplot2 ggplot ggsave aes_string facet_wrap theme_grey geom_line labs xlab ggtitle geom_point
 #' @importFrom luplot gginput
 #' @importFrom lusweave swopen swclose swfigure swlatex
@@ -36,7 +36,7 @@ plot_compare_supplycurves <- function(folders,pdfname=NULL) {
       tmp_fitcoef <- mbind(tmp_fitcoef,fitcoef)
     }
     
-    filtered <- tmp_filtered
+    filtered <- complete_magpie(tmp_filtered)
     fitcoef <- tmp_fitcoef
     
     rm(tmp_filtered,tmp_fitcoef,files,f)

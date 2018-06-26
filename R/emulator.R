@@ -21,6 +21,7 @@
 #' @param fill Logical (default=FALSE) indicating whether data will be copied from subsequent year if in the 
 #' current year not enough data points are avaialbe.
 #' @param output_path Path to save the output to
+#' @param fitname Name that describes the fit (default: linear) and will be used for naming the output folders.
 #' @param create_pdf Logical indicating whether a pdf should be produced that compiles all figures.
 #' @param ... Arguments passed on to the \code{optim} function in \code{calcualte_fit}. Useful to define bounds on fit coefficients.
 #' @return MAgPIE object containning fit coefficients
@@ -28,7 +29,7 @@
 #' @importFrom magclass getSets<- getNames getNames<- add_dimension collapseNames new.magpie
 #' @export
 
-emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(2,7),userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),outlier_range=1.5,n_suff=1,fill=FALSE,output_path="emulator",create_pdf=TRUE,...) {
+emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(2,7),userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),outlier_range=1.5,n_suff=1,fill=FALSE,output_path="emulator",fitname = "linear",create_pdf=TRUE,...) {
   
   cat("Starting generation of emulator.\n")
   
@@ -182,7 +183,7 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
   ########################################################
   
   for (scen in getNames(filtered,dim="scenario")) {
-    path_data <- file.path(output_path,scen)
+    path_data <- file.path(output_path,scen,fitname)
     ifelse(!dir.exists(path_data), dir.create(path_data), FALSE)
     f <- file.path(path_data,paste0("data_postfit_",scen,".Rdata"))
     cat("Saving data to",f,"\n")
@@ -194,7 +195,7 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
   ########################################################
   
   cat("Plotting supplycurve.\n")
-  plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes,output_path,create_pdf)
+  plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes,output_path,fitname,create_pdf)
   
   return(fitcoef)
 }

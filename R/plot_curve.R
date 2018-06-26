@@ -8,6 +8,7 @@
 #' @param supplycurve_indiviY MAgPIE object containing the points of the curve (with individual y limit) (output of \code{\link{calc_supplycurve}})
 #' @param infes MAgPIE object containing the modelstatus (optional output of \code{\link{mute_infes}})
 #' @param emu_path Name of the folder the figures and pdf will be saved to.
+#' @param fitname Name that describes the fit (default: linear) and will be used for naming the output folders.
 #' @param create_pdf Logical indicating whether a pdf should be produced that compiles all figures.
 #' @author David Klein
 #' @seealso \code{\link{calc_supplycurve}} \code{\link{mute_infes}}
@@ -18,12 +19,12 @@
 #' @importFrom grDevices colorRampPalette
 #' @importFrom stats na.omit
 
-plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu_path="emulator", create_pdf=TRUE) {
+plot_curve <- function(raw, supplycurve_commonY, supplycurve_indiviY, infes, emu_path="emulator", fitname = "linear", create_pdf=TRUE) {
 
   ifelse(!dir.exists(emu_path), dir.create(emu_path), FALSE)
   
   for (scen in getNames(supplycurve_commonY,dim=1)) {
-    path_plots <- file.path(emu_path,scen)
+    path_plots <- file.path(emu_path,scen,fitname)
     ifelse(!dir.exists(path_plots), dir.create(path_plots), FALSE)
     cat("Saving plots to",path_plots,"\n")
     outfile <- file.path(emu_path,paste0(scen,"_emulator.pdf"))
