@@ -26,19 +26,22 @@ fill_missing_years <- function(fitcoef, nodata, method=1) {
         } else {
           # 1. Go from end to beginning and take fit from year after
           for (y in (length(getYears(fitcoef))-1):1) {
-            if (nodata[r,y,s]) {
+            if (nodata[r,y,s] & !setYears(nodata[r,y+1,s])) {
               fitcoef[r,y,s] <- setYears(fitcoef[r,y+1,s])
               data_copied[r,y,s] <- setYears(fitcoef[r,y+1,s])
-              nodata[r,y,s] <- FALSE # update nodata so that step 2. (below) will not overwrite values that have already been replaced here
+              # update nodata for two reasons:
+              # 1. for the next iteration of this for-loop the second part of the condition above "!setYears(nodata[r,y+1,s])" needs to be true because now there is data available
+              # 2. step 2. (for-loop below) will not overwrite values that have already been replaced here
+              nodata[r,y,s] <- FALSE 
               takenfrom[r,y,s] <- getYears(fitcoef[,y+1,])
             }
           }
           # 2. Go from beginning to end and for remaining missing years take fit from year before
           for (y in 2:length(getYears(fitcoef))) {
-            if (nodata[r,y,s]) {
+            if (nodata[r,y,s] & !setYears(nodata[r,y-1,s])) {
               fitcoef[r,y,s] <- setYears(fitcoef[r,y-1,s])
               data_copied[r,y,s] <- setYears(fitcoef[r,y-1,s])
-              #nodata[r,y,s] <- FALSE # updata nodata for a consistent reporting of what has changed
+              nodata[r,y,s] <- FALSE # updata nodata for next iteration of this for-loop
               takenfrom[r,y,s] <- getYears(fitcoef[,y-1,])
             }
           }
