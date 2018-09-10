@@ -22,7 +22,7 @@ fill_missing_years <- function(fitcoef, nodata, method=1) {
       for (r in getRegions(fitcoef)) {
         # There is no fit for any year
         if (length(which(!nodata[r,,]))==0) {
-          cat("There is no fit available for any year in",s,r,"\n!")
+          cat("There is no fit available for any year in",s,r,"!\n")
         } else {
           # 1. Go from end to beginning and take fit from year after
           for (y in (length(getYears(fitcoef))-1):1) {
