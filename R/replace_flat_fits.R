@@ -25,7 +25,7 @@ replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",f
   load(path_to_postfit_Rdata)
   zero <- fitcoef[,,"b"]<0.01
   
-  # Find regions that have only flat fits ans set their fitcoefficients to NA for all years.
+  # Find regions that have only flat fits and set their fitcoefficients to NA for all years.
   # All NAs will be replaced by MOINPUT with artificial fits (= high prices)
   all_flat <-apply(zero,1,all)
   all_flat[is.na(all_flat)] <- FALSE # if no fit available
@@ -48,6 +48,10 @@ replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",f
   
   scen <- getNames(fitcoef,dim = "scenario")
   f <- path(emu_path,scen,fitname,paste0("f30_bioen_price_",scen,"_replaced_flat.cs4r"))
-  cat("Saving fit coefficients to",f,".\n")
+  cat("Writing fit coefficients to textfile",f,".\n")
   write.magpie(fitcoef,file_name = f)
+
+  f <- path(emu_path,scen,fitname,paste0("data_postfit_",scen,"_replaced_flat.Rdata"))
+  cat("Saving data to",f,"\n")
+  save(data,filtered,fitcoef,userfun,file = f)
 }
