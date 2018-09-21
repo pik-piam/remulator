@@ -24,7 +24,7 @@ plot_compare_supplycurves <- function(folders,pdfname=NULL) {
     
     # read and combine the results of different scenarios
     folders <- gsub("/$","",folders)
-    files <- paste0(folders,"/data_postfit_",folders,".Rdata")
+    files <- Sys.glob(paste0(folders,"/data_postfit_*.Rdata"))
     
     tmp_filtered <- NULL
     tmp_fitcoef <- NULL
