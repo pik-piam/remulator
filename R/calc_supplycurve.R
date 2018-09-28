@@ -66,7 +66,9 @@ calc_supplycurve <- function(data_in,fitcoef,myform,ylimit="common") {
   
       data <- data_in[,,scen,,,drop=FALSE] # select a particular scenario -> max for a particular scenario
       
-      max_glo <- as.magpie(apply(data,c(3,5),max,na.rm=TRUE))
+      # set spatial dimension to zero to prevent automatic detection of the spatial dimension by as.magpie, 
+      # it would otherwise detect three letter scenario names as spatial dimension
+      max_glo <- as.magpie(apply(data,c(3,5),max,na.rm=TRUE),spatial=0,temporal=0) 
   
       # For a nicer plot: expand supplycurves beyond the maximal demand of the respective region and year.
       # This is useful for early years where only very few points at low demand and low prices have been fitted.
