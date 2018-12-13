@@ -75,7 +75,7 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
   } else {
     # append modelstat if it exists
     # pick variables as provided by user
-    if(!name_modelstat %in% getNames(data, dim="variable")) stop("Could not find any variable with the name ",name_modelstat," you provided in name_modelstat in your data!")
+    if(!name_modelstat %in% getNames(data, dim="variable")) stop("Could not find any variable in your data with the name ",name_modelstat," you provided in name_modelstat!")
     data <- data[,,c(name_x,name_y,name_modelstat)]
     # rename variables to generic short names
     getNames(data,dim="variable") <- c("x","y","modelstat")
@@ -184,7 +184,7 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
   
   for (scen in getNames(filtered,dim="scenario")) {
     path_data <- file.path(output_path,scen,fitname)
-    ifelse(!dir.exists(path_data), dir.create(path_data), FALSE)
+    ifelse(!dir.exists(path_data), dir.create(path_data,recursive = TRUE), FALSE)
     f <- file.path(path_data,paste0("data_postfit_",scen,".Rdata"))
     cat("Saving data to",f,"\n")
     save(data,filtered,fitcoef,userfun,file = f)
