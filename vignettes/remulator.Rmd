@@ -140,3 +140,29 @@ emulator(data=emudata,
          output_path = "multi_case",
          lower=c(0,0))
 ```
+
+# Advanced
+
+## Replace flat fits
+
+In some cases the fitting algorithm fails and generates flat fits. To replace these flat fits with fits from other years use the `replace_flat_fits()` function. The example below shows how to apply the function:
+
+```{r, eval=FALSE}
+setwd("~/Documents/0_GIT/magpie4-model/")
+library(magclass)
+library(remulator)
+replace_flat_fits("output/emulator/SSP2-BASE-Base/linear/data_postfit_SSP2-BASE-Base.Rdata")
+replace_flat_fits("output/emulator/SSP2-26/linear/data_postfit_SSP2-26.Rdata")
+replace_flat_fits("output/emulator/SSP2-Ref/linear/data_postfit_SSP2-Ref.Rdata")
+
+```
+
+## Compare supplycurves
+
+Use the `plot_compare_supplycurves()` function to compare multiple supplycurves. See example below:
+
+```{r, eval=FALSE}
+setwd("~/Documents/0_GIT/magpie4-model/output/emulator")
+plot_compare_supplycurves(folders=c("SSP2-Ref","SSP2-26","SSP2-26-statfood"),pdfname = "comparison.pdf")
+```
+
