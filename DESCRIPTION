@@ -1,8 +1,8 @@
 Package: remulator
 Type: Package
 Title: R emulator
-Version: 1.15.2
-Date: 2018-12-13
+Version: 1.15.3
+Date: 2019-01-15
 Authors@R: c(person("David", "Klein", email = "dklein@pik-potsdam.de", role = c("aut","cre")))
 Description: A collection of R tools for fitting model results. 
 License: LGPL-3 | file LICENSE
@@ -23,4 +23,4 @@ RoxygenNote: 6.1.1
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
-ValidationKey: 20595456
+ValidationKey: 20651383

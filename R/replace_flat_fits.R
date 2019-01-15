@@ -43,26 +43,37 @@ replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",f
   # Calculate number of fitcoefficients that have been replaced
   n <-sum(!is.na(attributes(fitcoef)$takenfrom))
   cat("Number of fits that are considered flat and have been replaed:",n,"\n")
-  if (n>0) print(attributes(fitcoef)$takenfrom)
+  
+  print(attributes(fitcoef)$takenfrom)
 
   # Save data to files
   scen <- getNames(fitcoef,dim = "scenario")
   path_plots <- file.path(emu_path,scen,fitname)
   ifelse(!dir.exists(path_plots), dir.create(path_plots), FALSE)
-
-  f <- path(emu_path,scen,fitname,paste0("f30_bioen_price_",scen,"_replaced_flat.cs4r"))
-  cat("Writing fit coefficients to textfile",f,".\n")
-  write.magpie(fitcoef,file_name = f)
-
-  f <- path(emu_path,scen,fitname,paste0("data_postfit_",scen,"_replaced_flat.Rdata"))
-  cat("Saving data to",f,"\n")
-  save(data,filtered,fitcoef,userfun,file = f)
-
-  # Calculate and plot supplycurves
-  cat("Calculating supplycurves.\n")
-  supplycurve_commonY <- calc_supplycurve(data,fitcoef,myform=userfun)
-  supplycurve_indiviY <- calc_supplycurve(data,fitcoef,myform=userfun,ylimit="individual")
   
-  plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes=NA,emu_path=emu_path,fitname=fitname,create_pdf=FALSE)
+  if (n>0) {
+    f <- path(emu_path,scen,fitname,paste0("f30_bioen_price_",scen,"_replaced_flat.cs4r"))
+    cat("Writing fit coefficients to textfile",f,".\n")
+    write.magpie(fitcoef,file_name = f)
   
+    f <- path(emu_path,scen,fitname,paste0("data_postfit_",scen,"_replaced_flat.Rdata"))
+    cat("Saving data to",f,"\n")
+    save(data,filtered,fitcoef,userfun,file = f)
+  
+    # Calculate and plot supplycurves
+    cat("Calculating supplycurves.\n")
+    supplycurve_commonY <- calc_supplycurve(data,fitcoef,myform=userfun)
+    supplycurve_indiviY <- calc_supplycurve(data,fitcoef,myform=userfun,ylimit="individual")
+    
+    plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes=NA,emu_path=emu_path,fitname=fitname,create_pdf=FALSE)
+    
+  } else {
+    
+    cat("Replaced nothing. Stopping here.\n")
+    fileConn<-file(path(emu_path,scen,fitname,paste0("Nothing-replaced-",scen,".txt")))
+    writeLines(paste0("Scenario:",scen,"\nNumber of fits that are considered flat and have been replaed:",n,"\n"), fileConn)
+    close(fileConn)
+
+  }
+
 }
