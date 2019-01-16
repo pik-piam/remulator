@@ -35,19 +35,18 @@ replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",f
     fitcoef[reg_all_flat,,] <- NA
   }
   
-
   # replace fitcoefficients for years that have flat fits (b==0)
   cat("Replacing flat fits.\n")
   fitcoef <- fill_missing_years(fitcoef,zero)
   
   # Calculate number of fitcoefficients that have been replaced
   n <-sum(!is.na(attributes(fitcoef)$takenfrom))
-  cat("Number of fits that are considered flat and have been replaed:",n,"\n")
+  cat("Number of fits that are considered flat and have been replaced:",n,"\n")
   
   print(attributes(fitcoef)$takenfrom)
-
+  
   # Save data to files
-  scen <- getNames(fitcoef,dim = "scenario")
+  scen     <- getNames(fitcoef,dim = "scenario")
   path_plots <- file.path(emu_path,scen,fitname)
   ifelse(!dir.exists(path_plots), dir.create(path_plots), FALSE)
   
@@ -59,7 +58,7 @@ replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",f
     f <- path(emu_path,scen,fitname,paste0("data_postfit_",scen,"_replaced_flat.Rdata"))
     cat("Saving data to",f,"\n")
     save(data,filtered,fitcoef,userfun,file = f)
-  
+
     # Calculate and plot supplycurves
     cat("Calculating supplycurves.\n")
     supplycurve_commonY <- calc_supplycurve(data,fitcoef,myform=userfun)
@@ -67,13 +66,18 @@ replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",f
     
     plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes=NA,emu_path=emu_path,fitname=fitname,create_pdf=FALSE)
     
+    logfile <- path(emu_path,scen,fitname,paste0("replace-flat-fits-",scen,".log"))
+    
   } else {
     
     cat("Replaced nothing. Stopping here.\n")
-    fileConn<-file(path(emu_path,scen,fitname,paste0("Nothing-replaced-",scen,".txt")))
-    writeLines(paste0("Scenario:",scen,"\nNumber of fits that are considered flat and have been replaed:",n,"\n"), fileConn)
-    close(fileConn)
-
+    logfile <- path(emu_path,scen,fitname,paste0("nothing-replaced-",scen,".log"))
+    
   }
+
+  sink(logfile)
+  cat("Number of fits that are considered flat and have been replaced:",n,"\n")
+  print(attributes(fitcoef)$takenfrom)
+  sink()
 
 }
