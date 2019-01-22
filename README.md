@@ -46,3 +46,7 @@ Q: I can't build my vignette. Calling 'vignette("remulator")' gives me nothing. 
 A: You can try a workaround in RStudio: open remulator/vignettes/remulator.Rmd . 
 Then you can 'knit' the vignette locally by hitting the 'knit' button in the local menu of the opened document. 
 We are on it, it is a bug.
+
+## Citation
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2546517.svg)](https://doi.org/10.5281/zenodo.2546517)
