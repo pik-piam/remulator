@@ -29,11 +29,17 @@ plot_compare_supplycurves <- function(folders,pdfname=NULL) {
     tmp_filtered <- NULL
     tmp_fitcoef <- NULL
     
-    for (f in files) {
-      cat("Loading file",f,"\n")
-      load(f) # the file contains the variables "data", "filtered", "fitcoef", and "userfun"
+    for (fi in files) {
+      cat("Loading file",fi,"\n")
+      load(fi) # the file contains the variables "data", "filtered", "fitcoef", and "userfun"
+      newname <- gsub("/","-",fi) # replace slashes with dashes
+      newname <- gsub(".Rdata","",newname) # remove .Rdata from the name
+      newname <- gsub("data_postfit_","",newname) # remove data_postfit_ from the name
+      # use full path as new scenario name to ensure unique names
+      getNames(filtered,dim="scenario") <- newname
+      getNames(fitcoef,dim="scenario") <- newname
       tmp_filtered <- mbind(tmp_filtered,filtered)
-      tmp_fitcoef <- mbind(tmp_fitcoef,fitcoef)
+      tmp_fitcoef  <- mbind(tmp_fitcoef,fitcoef)
     }
     
     filtered <- complete_magpie(tmp_filtered)
