@@ -28,56 +28,39 @@ vignette: >
 * within the scenario folders the fit coefficients for the bioenergy supplycurves are stored in files like "f30_bioen_price_SSP2-26_690d3718e151be1b450b394c1064b1c5.cs4r"
 
 ## 1.3 Correct emulators if necessary (replace flat fits)
-* place this code in a script in MAgPIE's output folder
-* adapt it to your needs and run it to identify and replace flat fits
+* in some cases the resulting fits are flat (slope b < 0.01). Use the `replace_flat_fits` function to automatically detect and replace these fits with fits from the neighbouring years
+* place the code example from below into a script in the `emulator` folder within MAgPIE's output folder
+* adapt it to your needs and run it to replace flat fits
+
 ```
-################################################################
-################## 1.3 Replace flat fits #######################
-################################################################
+# ---- SSP2 Budg600 ----
 
-library(magclass)
-library(remulator)
-setwd("~/Documents/0_GIT/magpie4-model/output/")
-load("emulator/SSP2-Ref/linear/data_postfit_SSP2-Ref.Rdata")
+# For the Budg600 there is a bad (but not flat) fit for IND in 2050. 
+# To replace this bad fit for 2050 we set the fitcoeffcient in IND in 2050 to <0.01,
+# which causes the replace_falt_fits function to replace it with the 2050 fit
 
-zero <- fitcoef[,,"b"]<0.01
+load("SSP2-NDC-Budg600/linear/data_postfit_SSP2-NDC-Budg600.Rdata")
 
-#* replace fitcoefficients for years that have flat fits (b==0)
-fc <- fill_missing_years(fitcoef,zero)
+fitcoef["IND","y2050",] <- 0.001
 
-supplycurve_commonY <- calc_supplycurve(data,fc,myform=userfun)
-supplycurve_indiviY <- calc_supplycurve(data,fc,myform=userfun,ylimit="individual")
-remulator:::plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes=NA,emu_path="emulator",fitname="linear-no-flat",create_pdf=FALSE)
-write.magpie(fc,file_name = paste0("emulator/SSP2-Ref/linear-no-flat/f30_bioen_price_replaced_flats.cs4r"))
+save(fitcoef,data,filtered,userfun,file = "SSP2-NDC-Budg600/linear/data_postfit_SSP2-NDC-Budg600-IND-prepared.Rdata")
 
-setwd("~/Documents/0_GIT/magpie4-model/output/")
+replace_flat_fits("SSP2-NDC-Budg600/linear/data_postfit_SSP2-NDC-Budg600-IND-prepared.Rdata",emu_path = ".")
 
-load("emulator/SSP2-26/linear/data_postfit_SSP2-26.Rdata")
-
-zero <- fitcoef[,,"b"]<0.01
-
-#* replace fitcoefficients for years that have flat fits (b==0)
-fc <- fill_missing_years(fitcoef,zero)
-
-supplycurve_commonY <- calc_supplycurve(data,fc,myform=userfun)
-supplycurve_indiviY <- calc_supplycurve(data,fc,myform=userfun,ylimit="individual")
-
-remulator:::plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes=NA,emu_path="emulator",fitname="linear-no-flat",create_pdf=FALSE)
-
-library(magclass)
-write.magpie(fc,file_name = paste0("emulator/SSP2-26/linear-no-flat/f30_bioen_price_replaced_flats.cs4r"))
 
 ```
 
 # 2. MOINPUT
 * copy the files produced by the emulator script (see 1.2) or by the replace-script (see 1.3) into "sources/MAgPIE" of your input data preparation folder
+* add these files to list of files in `readMAgPIE.R` and if necessary add the new scenario names to the renaming list in `calcBiomassPrice.R`
 * run `calcOutput("BiomassPrices", round=6, file="f30_bioen_price.cs4r", realization="magpie_40")`
 * this produces the file "output/default/f30_bioen_price.cs4r"*
 
 # 3. REMIND
 * checkout REMIND 2.0
 * svn co http://subversion.pik-potsdam.de/svn/spark_remind/trunk
-* place the output files from above in "modules/30_biomass/magpie_40/input/f30_bioen_price.cs4r"
+* checkout MAgPIE 4.1
+* git clone https://github.com/magpiemodel/magpie.git
 
 # 4. Start coupled runs
 * in your REMIND folder open "start_bundle_coupled.R" and adapt the settings in the first section
