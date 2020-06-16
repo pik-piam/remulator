@@ -8,7 +8,6 @@
 #' @author David Klein
 #' @seealso \code{\link{emulator}} \code{\link{fill_missing_years}}
 #' @importFrom magclass getNames write.magpie
-#' @importFrom lucode path
 #' @export
 
 replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",fitname="replaced-flat") {
@@ -51,11 +50,11 @@ replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",f
   ifelse(!dir.exists(path_plots), dir.create(path_plots), FALSE)
   
   if (n>0) {
-    f <- path(emu_path,scen,fitname,paste0("f30_bioen_price_",scen,"_replaced_flat.cs4r"))
+    f <- file.path(emu_path,scen,fitname,paste0("f30_bioen_price_",scen,"_replaced_flat.cs4r"))
     cat("Writing fit coefficients to textfile",f,".\n")
     write.magpie(fitcoef,file_name = f)
   
-    f <- path(emu_path,scen,fitname,paste0("data_postfit_",scen,"_replaced_flat.Rdata"))
+    f <- file.path(emu_path,scen,fitname,paste0("data_postfit_",scen,"_replaced_flat.Rdata"))
     cat("Saving data to",f,"\n")
     save(data,filtered,fitcoef,userfun,file = f)
 
@@ -66,12 +65,12 @@ replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",f
     
     plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes=NA,emu_path=emu_path,fitname=fitname,create_pdf=FALSE)
     
-    logfile <- path(emu_path,scen,fitname,paste0("replace-flat-fits-",scen,".log"))
+    logfile <- file.path(emu_path,scen,fitname,paste0("replace-flat-fits-",scen,".log"))
     
   } else {
     
     cat("Replaced nothing. Stopping here.\n")
-    logfile <- path(emu_path,scen,fitname,paste0("nothing-replaced-",scen,".log"))
+    logfile <- file.path(emu_path,scen,fitname,paste0("nothing-replaced-",scen,".log"))
     
   }
 
