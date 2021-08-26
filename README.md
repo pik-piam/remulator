@@ -1,8 +1,8 @@
 # R emulator
 
-R package **remulator**, version **1.18.0**
+R package **remulator**, version **1.18.1**
 
-[![Travis build status](https://travis-ci.com/pik-piam/remulator.svg?branch=master)](https://travis-ci.com/pik-piam/remulator) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2546517.svg)](https://doi.org/10.5281/zenodo.2546517) 
+[![CRAN status](https://www.r-pkg.org/badges/version/remulator)](https://cran.r-project.org/package=remulator) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2546517.svg)](https://doi.org/10.5281/zenodo.2546517)    [![r-universe](https://pik-piam.r-universe.dev/badges/remulator)](https://pik-piam.r-universe.dev/ui#builds)
 
 ## Purpose and Functionality
 
@@ -35,8 +35,8 @@ update.packages()
 The package comes with vignettes describing the basic functionality of the package and how to use it. You can load them with the following command (the package needs to be installed):
 
 ```r
-vignette(magpie_emulator_for_remind) # How to produce MAgPIE 4.0 emulators and use them in REMIND 2.0
-vignette(remulator)                  # Fitting curves to data (of magclass format) and plotting the curves to nice graphs and pdf
+vignette("magpie_emulator_for_remind") # How to produce MAgPIE 4.0 emulators and use them in REMIND 2.0
+vignette("remulator")                  # Fitting curves to data (in magclass format) and plotting the curves to nice graphs and pdf
 ```
 
 ## Questions / Problems
@@ -47,9 +47,7 @@ In case of questions / problems please contact David Klein <dklein@pik-potsdam.d
 
 To cite package **remulator** in publications use:
 
-Klein D (2020). _remulator: R emulator_. doi: 10.5281/zenodo.2546517
-(URL: https://doi.org/10.5281/zenodo.2546517), R package version
-1.18.0, <URL: https://github.com/pik-piam/remulator>.
+Klein D (2021). _remulator: R emulator_. doi: 10.5281/zenodo.2546517 (URL: https://doi.org/10.5281/zenodo.2546517), R package version 1.18.1, <URL: https://github.com/pik-piam/remulator>.
 
 A BibTeX entry for LaTeX users is
 
@@ -57,8 +55,8 @@ A BibTeX entry for LaTeX users is
 @Manual{,
   title = {remulator: R emulator},
   author = {David Klein},
-  year = {2020},
-  note = {R package version 1.18.0},
+  year = {2021},
+  note = {R package version 1.18.1},
   doi = {10.5281/zenodo.2546517},
   url = {https://github.com/pik-piam/remulator},
 }

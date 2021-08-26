@@ -1,10 +1,10 @@
 ---
-title: "Fitting curves to data (of magclass format) and plotting the curves to nice graphs and pdf"
+title: "Fitting curves to data (in magclass format) and plotting the curves to nice graphs and pdf"
 author: "David Klein"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Fitting curves to data in magclass format}
+  %\VignetteIndexEntry{Fitting curves to data (in magclass format) and plotting the curves to nice graphs and pdf}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
