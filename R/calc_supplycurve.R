@@ -13,7 +13,7 @@
 #' @return MAgPIE object containing the points on the curve.
 #' @author David Klein
 #' @seealso \code{\link{calculate_fit}} \code{\link{plot_curve}}
-#' @importFrom magclass unwrap as.magpie getSets setNames collapseNames add_dimension mbind getSets<- ndata clean_magpie
+#' @importFrom magclass unwrap as.magpie getSets setNames collapseNames add_dimension mbind getSets<- ndata clean_magpie getItems
 #' @export
 
 calc_supplycurve <- function(data_in,fitcoef,myform,ylimit="common") {
