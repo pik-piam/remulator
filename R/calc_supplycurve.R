@@ -24,6 +24,9 @@ calc_supplycurve <- function(data_in,fitcoef,myform,ylimit="common") {
   
   # If data has global dimension but it is not the only one then remove it before searching for global maximum
   if (!setequal(getRegions(data_in),"GLO") & "GLO" %in% getRegions(data_in)) data_in <- data_in["GLO",,,invert=TRUE]
+  
+  scenario_names <- getItems(data_in, dim="scenario")
+
   # convert MAgPIE object into matrix
   data_in <- unwrap(data_in)
   
@@ -40,7 +43,8 @@ calc_supplycurve <- function(data_in,fitcoef,myform,ylimit="common") {
   
   res <- NULL
   
-  for (scen in dimnames(data_in)$scenario) {
+  
+  for (scen in scenario_names) {
 
     # ###### find min/max of raw data for calculating supplycurve within this regional range ######
     # limits <- apply(data,c(1,2,3,5),range,na.rm=TRUE)
