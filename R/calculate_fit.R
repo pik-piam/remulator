@@ -16,6 +16,9 @@ calculate_fit <- function(data,initial_values=c(1,1,1), form,...) {
   
   # convert MAgPIE object into matrix
   a <- unwrap(data)
+  
+  # transfer dimension names to unwrapped object
+  names(dimnames(a)) <- getSets(data)
 
   # fit supplycurves for all regions (1), all years (2), and all scenarios (3)
   tmp <- apply(a,c(1,2,3),minimize_least_squares,initial_values,form,...)
