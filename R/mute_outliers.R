@@ -45,6 +45,9 @@ mute_outliers <- function(data,range=1.5) {
   
   a <- unwrap(data)
   
+  # transfer dimension names to unwrapped object
+  names(dimnames(a)) <- getSets(data)
+
   # code for debugging
   # dat <- a["NAM","y2005",,,c("x","y")]
   # plot(dat)
