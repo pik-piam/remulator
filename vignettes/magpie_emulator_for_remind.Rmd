@@ -17,7 +17,7 @@ Since the supply curves reflect MAgPIE's price response to the demand for bioene
 
 By default REMIND uses the aforementioned data (bioenergy price and emissions) that was originally derived form MAgPIE. In most cases and if not explicitly requested, REMIND runs uncoupled to MAgPIE (**standalone mode**). Therefore there is no feedback from the MAgPIE model to the bioenergy demand and carbon price from REMIND. However, bioenergy prices in MAgPIE are sensitive to the carbon price (Klein et al. 2014). Also, SSP assumptions affect bioenergy prices (e.g. a SSP1 scenario tends to show lower bioenergy prices than a SSP5 scenario). Thus, it would not be appropriate to use a single supply curve in REMIND for different RCPs and SSPs. For this reason, there are different supply curves implemented in REMIND (derived from MAgPIE applying different carbon prices and SSPs), one of which can be chosen according to the the actual SSP-RCP scenario.
 
-To reach a higher consistency between REMIND and MAgPIE regarding bioenergy prices (and landuse emissions), REMIND can also be run in **coupled mode** iteratively with MAgPIE. In this case MAgPIE is run subsequently to REMIND using the bioenergy demand (and the carbon price) to calculate actual bioenergy prices (and landuse emissions). In the next iteration REMIND uses this price response to update its supply curves by scaling them upwards or downwards (multiplicative adjustment). The iteration is repeated until the bioenergy market is in equilibrium, i.e. until demand and price do not change across iterations. Note that **in both cases (stand-alone and coupled) REMIND uses the bioenergy supply curves, which are updated by MAgPIE only in the latter case.**
+To reach a higher consistency between REMIND and MAgPIE regarding bioenergy prices (and landuse emissions), REMIND can also be run in **coupled mode** iteratively with MAgPIE. In this case MAgPIE runs subsequently to REMIND using the bioenergy demand (and the carbon price) to calculate actual bioenergy prices (and landuse emissions). In the next iteration REMIND uses this price response to update its supply curves by scaling them upwards or downwards (multiplicative adjustment). The iteration is repeated until the bioenergy market is in equilibrium, i.e. until demand and price do not change across iterations. Note that **in both cases (stand-alone and coupled) REMIND uses the bioenergy supply curves, which are updated by MAgPIE only in the latter case.**
 
 If developments in the MAgPIE model affect bioenergy prices (e.g. by integrating afforestation or by modifying crucial input data such as food demand) it is necessary to derive new bioenergy supply curves (as described below) in order to (i) reflect these changes in REMIND standalone runs or (ii) to provide a better starting point for the convergence in coupled runs.
 
@@ -41,38 +41,42 @@ These steps are explained in detail below.
 
 * Clone MAgPIE on the cluster
   * `git clone https://github.com/magpiemodel/magpie`
-  * checkout the appropriate branch (most likely the develop branch, sometimes the rc (=release candidate))
-* in `config/scenario_config_emulator.csv` characterize the scenarios and set `start` to `1` for those you want to get supplycurves for (e.g. SSP2). Each line in `config/scenario_config_emulator.csv` defines one **scenario**. For each scenario the start script launches 73 MAgPIE runs applying 73 different bioenergy demand trajectories. The characteristics of a scenario are defined in the columns of `config/scenario_config_emulator.csv`, most importantly the MAgPIE basic configuration (`mag_scen`) and the RCP represented by a carbon price trajectory (`co2tax_2025`). In detail:
+  * Checkout the appropriate branch (most likely the develop branch, sometimes the rc (=release candidate))
+* In `config/scenario_config_emulator.csv` characterize the scenarios and set `start` to `1` for those you want to get supplycurves for (e.g. SSP2). Each line in `config/scenario_config_emulator.csv` defines one **scenario**. For each scenario the start script (see below) will launch 73 MAgPIE runs applying 73 different bioenergy demand trajectories. The characteristics of a scenario are defined in the columns of `config/scenario_config_emulator.csv`, most importantly the MAgPIE basic configuration (`mag_scen`) and the RCP represented by a carbon price trajectory (`co2tax_2025`). In detail:
   + `title`: can be neglected, the name of the output folders will be generated automatically based on the scenario settings
   + `start`: defines if this scenario will be run (1) or not (0)
   + `mag_scen`: a combination of built-in pre-defined scenario settings available in MAgPIE, such as SSP, NDC, ...
   + `co2tax_name`: the name that will be used to name the output
   + `co2tax_2025`: the name of a REMIND mif file containing the GHG prices that will be applied for this scenario. **IMPORTANT: You need to copy the mif files to the MAgPIE main folder before starting the MAgPIE runs!**. E.g. a file like `REMIND_generic_C_SSP5-NDC-rem-5.mif`.
-* start emulator runs using `Rscript start.R` -> `9: extra` -> `2: emulator` in the MAgPIE's mainfolder
+* Start emulator runs using `Rscript start.R` -> `9: extra` -> `2: emulator` in the MAgPIE's mainfolder
 
 
 ## 1.2 Calculate bioenergy supply curves
-* After all 73 MAgPIE runs belonging to a scenario are fished the emulators should already be available for this scenario, since for each scenario (as defined under 1.1.) the last of the 73 MAgPIE runs triggers the emulator script for the respective scenario.
+
+The supply curves are generated automatically by one of the output scripts available in MAgPIE. It is located here `scripts/output/extra/emulator.R` and uses the `emulator` function of this package. For more details  please see the `vigentte("remulator")` and `?emulator`.
+
+* After all 73 MAgPIE runs belonging to a scenario are fished the emulator should already be available for this scenario, since the last of the 73 runs triggers the emulator script for the respective scenario.
 * The emulator script creates a new folder `output/emulator`, containing individual subfolders for each scenario from the scenario_config file.
-* The supply curves are linear fits through the 73 points in the biomass price / quantity sphere for each time step and each region. The fits are represented by coefficients $a$ (y-intercept) and $b$ (slope). 
-* within the scenario folders the fit coefficients (that will go into REMIND) are stored in files like `f30_bioen_price_SSP2-26_690d3718e151be1b450b394c1064b1c5.cs4r` and visualized e.g. in `scatter-fit-allyears-fixed-SSP2-NDC-PkBudg900.png`:
+* The supply curves are linear fits through the 73 points in the biomass price / quantity sphere for each time step and each region. The fits are represented by coefficients $a$ (y-intercept) and $b$ (slope).
+* Within the scenario folders the fit coefficients are stored in a file (that will go into REMIND) like `f30_bioen_price_SSP2-26_690d3718e151be1b450b394c1064b1c5.cs4r` and visualized like in `scatter-fit-allyears-fixed-SSP2-NDC-PkBudg900.png`:
 
 ![Picture: supply curves](scatter-fit-allyears-fixed-SSP2-NDC-PkBudg900.png){width=100%}
 
 * If no supply curves are available, you can start the emulator script manually using 
   * `Rscript output.R`.
-  * -> the number of only **ONE** (any) of the runs that belong to the scenario you want to produce the emulators for. The other runs belonging to this scenario will be identified automatically.
+  * -> select the number of only **ONE** of any of the runs that belong to the scenario you want to produce the emulators for. The other runs belonging to this scenario will be identified automatically.
   * -> `6: extra` -> `4: emulator`
 * In case you need to debug find the underlying script here `scripts/output/extra/emulator.R`
 
 ## 1.3 Correct emulators if necessary (replace flat fits)
 
-* You will probably note that for some regions (usually regions with low biomass potential, often CAZ or MEA) the algorithm was not able to find a good linear fit in every time step. This often happens when the slope of the fit would need to be infinite (or at least very high), i.e. when there is no biomass potential, irrespective of the price that is being paid. In this case, the fit is (often) a flat line with slope zero, or close to zero (e.g. `scatter-fit-SDP-NDC-NDC-CAZ.png`):
+You will probably note that for some regions (usually regions with low biomass potential, often CAZ or MEA) the algorithm was not able to find a good linear fit in every time step. This often happens when the slope of the fit would need to be infinite (or at least very high), i.e. when there is no biomass potential, irrespective of the price that is being paid. In this case, the fit is (often) a flat line with slope zero, or close to zero (e.g. `scatter-fit-SDP-NDC-NDC-CAZ.png`):
 
 ![Picture: flat fits](scatter-fit-SSP2-NDC-NDC-CAZ.png){width=100%}
 
-* For **each scenario** these **flat fits** need to be **adjusted manually**, so that they are either overwritten by values from subsequent years (for example using 2055 values also for 2050), or simply removed (i.e. that there is no potential at all in the respective year for the respective region). This is done with the `replace_flat_fits.R` script (which is part of this package):
-* Check for each region, in which time steps the fit functions are too small and set respective coefficients to `0.01` (just needs to be a small enough number $0 < x <= 0.01$). Given a region, for all of these time steps the algorithm will now automatically use fits from subsequent years.
+For **each scenario** these **flat fits** need to be **adjusted manually**, so that they are either overwritten by values from subsequent years (for example using 2055 values also for 2050), or simply removed (i.e. that there is no potential at all in the respective year for the respective region). This is done with the `replace_flat_fits.R` script (which is part of this package):
+
+* Check for each region, in which time steps the fit functions are too small and set respective coefficients to `0.01` (just needs to be a small enough number $0 < x \leq 0.01$). Given a region, for all of these time steps the algorithm will now automatically use fits from subsequent years.
 * If there are no “good years” at all (happens quite often for MEA for example), it might be necessary to set coefficients to `NA` manually (but in most cases, this is not necessary or it was already done automatically). This will result in emulators that don’t allow for any bioenergy production in the respective region.
 *	Attention: in the .png files for each region (e.g. `scatter-fit-… -CAZ.png`) it is sometimes difficult to see if slopes are really too small, since the scaling of the x- and y-axes are not fixed, so better double check with the plot for the respective year (e.g. `scatter-fit-…-y2045.png`), here the scaling is fixed and the slope can be compared with other regions.
 *	After setting coefficients for all respective regions and all time steps to `0.01` or `NA`, run replace_flat_fits.R.  The script will create a new subfolder “replaced_flat”, where now all fits should be corrected (you can check the new `scatter-fit-allyears-fixed-….png` if all flat fits were replaced).
