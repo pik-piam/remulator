@@ -11,33 +11,28 @@ vignette: >
 
 # Introduction
 
-In many REMIND mitigation scenarios bioenergy plays a major role in decarbonizing the energy system (e.g. [Klein et al. 2013](http://link.springer.com/article/10.1007%2Fs10584-013-0940-z)). Thus, the biomass potential and its costs are crucial factors that affect overall mitigation costs ([Klein et al. 2013](http://link.springer.com/article/10.1007%2Fs10584-013-0940-z), [Rose et al. 2013](http://link.springer.com/article/10.1007%2Fs10584-013-0965-3)). In REMIND there are two types of biomass, **residues** and **purpose-grown biomass**. Residues are available at a constant price of 1 $/GJ and have a (linearly increasing) maximal global potential of less than 70 EJ/yr. The resource of purpose-grown biomass has no explicit upper limit. Its potential and supply price are represented by **regional biomass supply curves** that provide the bioenergy **price as a function of bioenergy demand** ([Klein et al. 2014](http://iopscience.iop.org/1748-9326/9/7/074017)). REMIND calculates the costs by integrating the price function. **This tutorial describes how to derive these bioenergy supply curves** from the global landuse model MAgPIE. 
+In many REMIND mitigation scenarios bioenergy plays a major role in decarbonizing the energy system (e.g. [Klein et al. 2013](http://link.springer.com/article/10.1007%2Fs10584-013-0940-z)). Thus, the biomass potential and its costs are crucial factors that affect overall mitigation costs ([Klein et al. 2013](http://link.springer.com/article/10.1007%2Fs10584-013-0940-z), [Rose et al. 2013](http://link.springer.com/article/10.1007%2Fs10584-013-0965-3)). In REMIND there are two types of biomass, **residues** and **purpose-grown biomass**. Residues are available at a constant price of 1 $/GJ and have a (linearly increasing) maximal global potential of less than 55 EJ/yr. The resource of the more relevant purpose-grown biomass has no explicit upper limit. Its potential and supply price are represented by **regional biomass supply curves** that provide the bioenergy **price as a function of bioenergy demand** ([Klein et al. 2014](http://iopscience.iop.org/1748-9326/9/7/074017)). REMIND calculates the costs by integrating the price function. **This tutorial describes how to derive these bioenergy supply curves** from the global landuse model MAgPIE. 
 
-Since the supply curves reflect MAgPIE's price response to the demand for bioenergy they are called the **MAgPIE emulator**. Actually, the MAgPIE emulator comprises further MAgPIE data in REMIND representing the landuse system, especially landuse emissions from agriculture and bioenergy production, and agricultural production costs. In contrast to the bioenergy supply curves, which are part of the optimization in REMIND, these further MAgPIE data are given by fixed exogenous trajectories available for a couple of SSP-RCP combinations. A description can be found [here](https://redmine.pik-potsdam.de/projects/remind-r/wiki/Updating_inputs_from_MAgPIE). However, this tutorial focuses on the biomass supply curves only.
+Since the supply curves reflect MAgPIE's price response to the demand for bioenergy they are called the **MAgPIE emulator**. Actually, the MAgPIE emulator comprises further MAgPIE data in REMIND representing the landuse system, especially landuse emissions from agriculture and bioenergy production, and agricultural production costs. In contrast to the bioenergy supply curves, which are part of the optimization in REMIND, these further MAgPIE data are given by fixed exogenous trajectories available for a couple of SSP-RCP combinations. A description can be found [here](https://redmine.pik-potsdam.de/projects/remind-r/wiki/Updating_inputs_from_MAgPIE). This tutorial focuses on the biomass supply curves only.
 
-By default REMIND uses the aforementioned data (bioenergy price and emissions) that was originally derived form MAgPIE. However, in a regular REMIND run (**standalone mode**) there is no feedback from the MAgPIE model to the bioenergy demand and/or the carbon price. However, bioenergy prices in MAgPIE are sensitive to the carbon price (Klein et al. 2014). Also, SSP assumptions affect bioenergy prices (e.g. a SSP1 scenario tends to show lower bioenergy prices than a SSP5 scenario). Thus, it would not be appropriate to use a single supply curve in REMIND for different RCPs and SSPs. Therefore, there are different supply curves implemented in REMIND (derived from MAgPIE applying different carbon prices and SSPs), one of which can be chosen according to the the actual SSP-RCP scenario.
+By default REMIND uses the aforementioned data (bioenergy price and emissions) that was originally derived form MAgPIE. In most cases and if not explicitly requested, REMIND runs uncoupled to MAgPIE (**standalone mode**). Therefore there is no feedback from the MAgPIE model to the bioenergy demand and carbon price from REMIND. However, bioenergy prices in MAgPIE are sensitive to the carbon price (Klein et al. 2014). Also, SSP assumptions affect bioenergy prices (e.g. a SSP1 scenario tends to show lower bioenergy prices than a SSP5 scenario). Thus, it would not be appropriate to use a single supply curve in REMIND for different RCPs and SSPs. For this reason, there are different supply curves implemented in REMIND (derived from MAgPIE applying different carbon prices and SSPs), one of which can be chosen according to the the actual SSP-RCP scenario.
 
-To reach a higher consistency between REMIND and MAgPIE regarding bioenergy prices (and landuse emissions), REMIND can also be run in **coupled mode** iteratively with MAgPIE. In this case MAgPIE is run subsequently to REMIND using the bioenergy demand (and the carbon price) to calculate actual bioenergy prices. In the next iteration REMIND uses this price response to update its supply curves by scaling them upwards or downwards (multiplicative adjustment). The iteration is repeated until the bioenergy market is in equilibrium, i.e. until demand and price do not change across iterations. Note that **in both cases (stand-alone and coupled) REMIND uses the bioenergy supply curves, which are updated by MAgPIE only in the latter case.**
+To reach a higher consistency between REMIND and MAgPIE regarding bioenergy prices (and landuse emissions), REMIND can also be run in **coupled mode** iteratively with MAgPIE. In this case MAgPIE is run subsequently to REMIND using the bioenergy demand (and the carbon price) to calculate actual bioenergy prices (and landuse emissions). In the next iteration REMIND uses this price response to update its supply curves by scaling them upwards or downwards (multiplicative adjustment). The iteration is repeated until the bioenergy market is in equilibrium, i.e. until demand and price do not change across iterations. Note that **in both cases (stand-alone and coupled) REMIND uses the bioenergy supply curves, which are updated by MAgPIE only in the latter case.**
 
 If developments in the MAgPIE model affect bioenergy prices (e.g. by integrating afforestation or by modifying crucial input data such as food demand) it is necessary to derive new bioenergy supply curves (as described below) in order to (i) reflect these changes in REMIND standalone runs or (ii) to provide a better starting point for the convergence in coupled runs.
 
 ## The method
 
-The bioenergy supply price curves are derived by measuring the price response of the MAgPIE model to 73 different global bioenergy demand scenarios. Each global bioenergy demand scenario yields a time path of bioenergy production and bioenergy prices for 11 MAgPIE regions. For each region and time step the supply curve is fitted to the resulting 73 combinations of bioenergy production and bioenergy prices.
+The bioenergy supply price curves are derived by measuring the price response of the MAgPIE model to 73 different global bioenergy demand scenarios. Each global bioenergy demand scenario yields a time path of bioenergy production and bioenergy prices for all MAgPIE regions. For each region and time step the supply curve is fitted to the resulting 73 combinations of bioenergy production and bioenergy prices.
 
 ![Methods: Constructing the supply curves](method.png)
 
 ## Main steps
 
-* Optional: Prepare input data for MAgPIE runs (MATLAB on your computer): 73 bioenergy demand scenarios, GHG price scenarios (e.g. No tax, tax 30, ...). This step can be skipped if you want to use the standard set of input data that is automatically downloaded by the emulator script mentioned below.
-
-* Start MAgPIE runs on the cluster using an emulator start script that is shipped with MAgPIE.
-* Calculate the supply curves using the the emulator script of this R package.
-* Feed the resulting files into mrremind to make it part of the REMIND intput data.
-
-
-For each GHG price scenario 73 MAgPIE runs with different bioenergy demands are started. These standard set of input data that is automatically downloaded by the emulator script mentioned belowThere may be even more scenarios than the different GHG price scenarios, e.g. by combining GHG prices with different SSPs or by switching afforestation on and off in MAgPIE. For each of these scenarios 73 runs have to be performed.
- The last of the 73 runs (per scenario) triggers the emulator script of this package to calcualte the fits.
+* Optional: Prepare input data for MAgPIE (MATLAB on your computer): 73 bioenergy demand scenarios, GHG price scenarios (e.g. No tax, tax 30, ...). This step can be skipped for bioenergy demand if you want to use the standard set of input data that is automatically downloaded by the emulator script mentioned below.
+* Start MAgPIE runs on the cluster using the emulator start script that is shipped with MAgPIE. For each GHG price scenario 73 MAgPIE runs with different bioenergy demands are started.
+* Calculate the supply curves using the emulator function of this R package.
+* Feed the resulting files into [mrremind](https://github.com/pik-piam/mrremind) to make it part of the REMIND intput data.
 
 These steps are explained in detail below.
 
@@ -47,25 +42,25 @@ These steps are explained in detail below.
 * Clone MAgPIE on the cluster
   * `git clone https://github.com/magpiemodel/magpie`
   * checkout the appropriate branch (most likely the develop branch, sometimes the rc (=release candidate))
-* in `config/scenario_config_emulator.csv` characterize the scenarios and set `start` to `1` for those you want to get supplycurves for (e.g. SSP2)
-* Each line in `config/scenario_config_emulator.csv` defines a scenario. For each scenario the start script launches 73 MAgPIE runs applying 73 different bioenergy demand trajectories. The characteristics of a scenario are defined in the columns of the `config/scenario_config_emulator.csv.`, most importantly the MAgPIE basic configuration (`mag_scen`) and the RCP represented by a carbon price trajectory (`co2tax_2025`). In detail:
+* in `config/scenario_config_emulator.csv` characterize the scenarios and set `start` to `1` for those you want to get supplycurves for (e.g. SSP2). Each line in `config/scenario_config_emulator.csv` defines one **scenario**. For each scenario the start script launches 73 MAgPIE runs applying 73 different bioenergy demand trajectories. The characteristics of a scenario are defined in the columns of `config/scenario_config_emulator.csv`, most importantly the MAgPIE basic configuration (`mag_scen`) and the RCP represented by a carbon price trajectory (`co2tax_2025`). In detail:
   + `title`: can be neglected, the name of the output folders will be generated automatically based on the scenario settings
   + `start`: defines if this scenario will be run (1) or not (0)
   + `mag_scen`: a combination of built-in pre-defined scenario settings available in MAgPIE, such as SSP, NDC, ...
   + `co2tax_name`: the name that will be used to name the output
-  + `co2tax_2025`: the name of a REMIND mif file containing the GHG prices that will be applied for this scenario. This mif file needs to be copied to the MAgPIE main folder, e.g. `REMIND_generic_C_SSP5-NDC-rem-5.mif`
+  + `co2tax_2025`: the name of a REMIND mif file containing the GHG prices that will be applied for this scenario. **IMPORTANT: You need to copy the mif files to the MAgPIE main folder before starting the MAgPIE runs!**. E.g. a file like `REMIND_generic_C_SSP5-NDC-rem-5.mif`.
 * start emulator runs using `Rscript start.R` -> `9: extra` -> `2: emulator` in the MAgPIE's mainfolder
 
 
 ## 1.2 Calculate bioenergy supply curves
-* after all MAgPIE runs are fished the emulators should be already available, since for each scenario defined under 1.1. the last of the 73 MAgPIE runs triggers the emulator script for this scenario.
-* The emulator script creates a new folder `output/emulator`, containing subfolders for each scenario from the scenario_config file
-* the supply curves are linear fits through the 73 points in the biomass price / quantity sphere for each time step and each region. The fits are represented by coefficients a (y-intercept) and b (slope). 
-* within the scenario folders the fit coefficients (that will go into REMIND) stored in files like `f30_bioen_price_SSP2-26_690d3718e151be1b450b394c1064b1c5.cs4r` and visualized e.g. in `scatter-fit-allyears-fixed-SSP2-NDC-PkBudg900.png`:
+* After all 73 MAgPIE runs belonging to a scenario are fished the emulators should already be available for this scenario, since for each scenario (as defined under 1.1.) the last of the 73 MAgPIE runs triggers the emulator script for the respective scenario.
+* The emulator script creates a new folder `output/emulator`, containing individual subfolders for each scenario from the scenario_config file.
+* The supply curves are linear fits through the 73 points in the biomass price / quantity sphere for each time step and each region. The fits are represented by coefficients $a$ (y-intercept) and $b$ (slope). 
+* within the scenario folders the fit coefficients (that will go into REMIND) are stored in files like `f30_bioen_price_SSP2-26_690d3718e151be1b450b394c1064b1c5.cs4r` and visualized e.g. in `scatter-fit-allyears-fixed-SSP2-NDC-PkBudg900.png`:
 
 ![Picture: supply curves](scatter-fit-allyears-fixed-SSP2-NDC-PkBudg900.png){width=100%}
 
-* if no supply curves are available, start the emulator script manually using `Rscript output.R`.
+* If no supply curves are available, you can start the emulator script manually using 
+  * `Rscript output.R`.
   * -> the number of only **ONE** (any) of the runs that belong to the scenario you want to produce the emulators for. The other runs belonging to this scenario will be identified automatically.
   * -> `6: extra` -> `4: emulator`
 * In case you need to debug find the underlying script here `scripts/output/extra/emulator.R`
