@@ -76,10 +76,10 @@ You will probably note that for some regions (usually regions with low biomass p
 
 For **each scenario** these **flat fits** need to be **adjusted manually**, so that they are either overwritten by values from subsequent years (for example using 2055 values also for 2050), or simply removed (i.e. that there is no potential at all in the respective year for the respective region). This is done with the `replace_flat_fits.R` script (which is part of this package):
 
-* Check for each region, in which time steps the fit functions are too small and set respective coefficients to `0.01` (just needs to be a small enough number $0 < x \leq 0.01$). Given a region, for all of these time steps the algorithm will now automatically use fits from subsequent years.
+* Check for each region, in which time steps the fit functions are too small and set respective coefficients to less than `0.01` (just needs to be a small enough number $0 < x < 0.01$). Given a region, for all of these time steps the algorithm will now automatically use fits from subsequent years.
 * If there are no “good years” at all (happens quite often for MEA for example), it might be necessary to set coefficients to `NA` manually (but in most cases, this is not necessary or it was already done automatically). This will result in emulators that don’t allow for any bioenergy production in the respective region.
 *	Attention: in the .png files for each region (e.g. `scatter-fit-… -CAZ.png`) it is sometimes difficult to see if slopes are really too small, since the scaling of the x- and y-axes are not fixed, so better double check with the plot for the respective year (e.g. `scatter-fit-…-y2045.png`), here the scaling is fixed and the slope can be compared with other regions.
-*	After setting coefficients for all respective regions and all time steps to `0.01` or `NA`, run replace_flat_fits.R.  The script will create a new subfolder “replaced_flat”, where now all fits should be corrected (you can check the new `scatter-fit-allyears-fixed-….png` if all flat fits were replaced).
+*	After setting coefficients for all respective regions and all time steps to a value less than `0.01`, run replace_flat_fits.R. The script will create a new subfolder “replaced_flat”, where now all fits should be corrected (you can check the new `scatter-fit-allyears-fixed-….png` if all flat fits were replaced).
 * use the code example from below to replace the flat fits. Place the code into a script in the `output/emulator` folder adapt it to your needs and run it via `Rscript`.
 
 ```
@@ -91,7 +91,7 @@ For **each scenario** these **flat fits** need to be **adjusted manually**, so t
 
 load("SSP2-NDC-Budg600/linear/data_postfit_SSP2-NDC-Budg600.Rdata")
 
-fitcoef["IND","y2050",] <- 0.01
+fitcoef["IND","y2050",] <- 0.001
 
 save(fitcoef,data,filtered,userfun,file = "SSP2-NDC-Budg600/linear/data_postfit_SSP2-NDC-Budg600-IND-prepared.Rdata")
 
