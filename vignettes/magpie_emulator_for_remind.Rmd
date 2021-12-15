@@ -159,7 +159,7 @@ The linear coefficients file in REMIND is in the `path/to/remind/modules/30_biom
 2000,REF,SDP,rcp45,a,0.100725
 ```
 
-The header doesn't make a difference in this case. If you want to force REMIND to use your new emulators, all you have to do is replace all scenarios and rcps in this file with fits from your new emulator. First make copy of the original to be sure.
+The header doesn't make a difference in this case. If you want to force REMIND to use your new emulators, all you have to do is replace the scenario and rcp you will be using in this file with fits from your new emulator. First make copy of the original to be sure.
 
 `cp path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price.cs4r` `path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price_old.cs4r`
 
@@ -173,8 +173,13 @@ old <- read.magpie(oldfilepath)
 # Create a copy magclass object
 out <- old
 
-# Replaces repeating data on all dimensions
-out[,,] <- new
+# Replaces in the original repeating data on all unspecified dimensions
+# You have to specify one element in each dimension for the expansion to work properly
+# Here we replace all `SSP2` and `SSP1` scenarios in all RCPs for illustrative purposes. 
+out[,,"SSP2"] <- new
+out[,,"SSP1"] <- new
+# If you want to differentiate between RCPs, use magclass notation. But always one element at a time.
+# out[,,"SSP2.rcp45"] <- new
 
 # Add metadata on modification date and path, purely optional
 out <- setComment(out,c(getComment(out),paste0(" modification date: ", format(Sys.time(), "%a %b %d %X %Y %Z")),paste0(" modified at: ", getwd())))
@@ -184,5 +189,5 @@ outfilepath <- "/path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_pri
 write.magpie(out, outfilepath)
 ```
 
-If you check `/path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price.cs4r`, the values for all scenarios and rcps should be the same (different between regions, years and coefficients).
+If you check `/path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price.cs4r`, the values for all scenarios and rcps that you replaced should be the same (different between regions, years and coefficients). REMIND will decide which SSP to pick in this file from cm_LU_emi_scen and the RCP from cm_rcp_scen, so be sure that these switches match the SSPs and RCPs you replaced.
 
