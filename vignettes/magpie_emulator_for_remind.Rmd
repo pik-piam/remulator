@@ -105,8 +105,89 @@ replace_flat_fits("SSP2-NDC-Budg600/linear/data_postfit_SSP2-NDC-Budg600-IND-pre
 *	This needs to be done for every scenario, where flat fits were replaced
 
 
-# 2. Add to REMIND input data via MRREMIND
+# 2. Add to REMIND input data
+## 2.1 Via `mrremind`
+This is what should be done in a production setting, when you want to publish the emulators you generated.
 * copy the files produced by the emulator script (see 1.2) or by the replace-script (see 1.3) into "sources/MAgPIE" of your input data preparation folder
 * add these files to list of files in `readMAgPIE.R` and if necessary add the new scenario names to the renaming list in `calcBiomassPrice.R`
 * run `calcOutput("BiomassPrices", round=6, file="f30_bioen_price.cs4r", realization="magpie_40")`
 * this produces the file `output/default/f30_bioen_price.cs4r`
+
+## 2.2 Adding manually
+If you just want to test the generated emulators in REMIND, it might be easier to manually change the relevant files. The emulator coefficients are in the file `f30_bioen_price.cs4r`,  but to do this manually you must reproduce some of the postprocessing `mrremind` would do. 
+
+If you replaced flat fits, your emulator will be in (for example in a `SSP2-NPI-Base` scenario) `SSP2-NPI-Base/replaced-flat/f30_bioen_price_SSP2-NPI-Base_replaced_flat.cs4r`. The first data lines will look something like this. There's no variable name header, but they represent `year, region, scenario, coefficient, value`. There are two coefficients, `a` and `b`, representing the linear fits. 
+
+```
+2000,CAZ,SSP2-NPI-Base,a,1
+2000,CHA,SSP2-NPI-Base,a,0.172909809987918
+2000,EUR,SSP2-NPI-Base,a,0.141727536350427
+2000,IND,SSP2-NPI-Base,a,0.166571929509765
+2000,JPN,SSP2-NPI-Base,a,0.0824748054814729
+```
+
+### Replace NAs with artificial fits
+The first thing you must do is fix the NAs, replacing them with an artificial fit that prohibits biomass production for that region.
+
+```
+# Manually correct NAs in the cs4r since we're not going through mrremind at this time
+newfilepath <- "SSP2-NPI-Base/replaced-flat/f30_bioen_price_SSP2-NPI-Base_replaced_flat.cs4r"
+new <- read.magpie(newfilepath)
+
+new[,,"a"][is.na(new[,,"a"])] <- 1
+new[,,"b"][is.na(new[,,"b"])] <- 0.1
+
+write.magpie(new, newfilepath)
+```
+
+### Use the file in REMIND as base
+
+The linear coefficients file in REMIND is in the `path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price.cs4r` in the REMIND folder. It has an additional `rcp` dimension, and contains data for several other scenarios, e.g.:
+
+```
+* description: coefficients for the bioenergy supplycurve
+* unit: none
+* comment: Data aggregated (toolAggregate): Thu Dec  2 19:46:36 2021
+* origin: calcOutput(type = "BiomassPrices", file = "f30_bioen_price.cs4r", round = 6) (madrat 2.7.1 | mrremind 0.92.2)
+* creation date: Mon Dec  6 09:33:08 2021
+2000,LAM,SDP,rcp45,a,0.124899
+2000,OAS,SDP,rcp45,a,0.175994
+2000,SSA,SDP,rcp45,a,0.207542
+2000,EUR,SDP,rcp45,a,0.074097
+2000,NEU,SDP,rcp45,a,0.125951
+2000,MEA,SDP,rcp45,a,0.329863
+2000,REF,SDP,rcp45,a,0.100725
+```
+
+The header doesn't make a difference in this case. If you want to force REMIND to use your new emulators, all you have to do is replace the scenario and rcp you will be using in this file with fits from your new emulator. First make copy of the original to be sure.
+
+`cp path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price.cs4r` `path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price_old.cs4r`
+
+Then in the same R script before do:
+
+```
+# Now we add this data to an old file with the correct structure 
+oldfilepath <- "/path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price_old.cs4r"
+old <- read.magpie(oldfilepath)
+
+# Create a copy magclass object
+out <- old
+
+# Replaces in the original repeating data on all unspecified dimensions
+# You have to specify one element in each dimension for the expansion to work properly
+# Here we replace all `SSP2` and `SSP1` scenarios in all RCPs for illustrative purposes. 
+out[,,"SSP2"] <- new
+out[,,"SSP1"] <- new
+# If you want to differentiate between RCPs, use magclass notation. But always one element at a time.
+# out[,,"SSP2.rcp45"] <- new
+
+# Add metadata on modification date and path, purely optional
+out <- setComment(out,c(getComment(out),paste0(" modification date: ", format(Sys.time(), "%a %b %d %X %Y %Z")),paste0(" modified at: ", getwd())))
+
+# File that REMIND will actually use
+outfilepath <- "/path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price.cs4r"
+write.magpie(out, outfilepath)
+```
+
+If you check `/path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price.cs4r`, the values for all scenarios and rcps that you replaced should be the same (different between regions, years and coefficients). REMIND will decide which SSP to pick in this file from cm_LU_emi_scen and the RCP from cm_rcp_scen, so be sure that these switches match the SSPs and RCPs you replaced.
+
