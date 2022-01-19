@@ -2,26 +2,47 @@
 #' 
 #' This function considers fits with a slope less than 0.01 flat and tries to replace them with non-flat fits from other years.
 #' 
-#' @param path_to_postfit_Rdata Path to the Rdata file that contains raw data, fitted data and fitcoefficients saved by the emulator function
-#' @param emu_path Path the emulator results have been saved to by the emulator function.
-#' @param fitname Name that describes the fit (default: linear) and will be used for naming the output folders.
+#' @param path_to_postfit_Rdata path to the Rdata file that contains raw data, fitted data and fitcoefficients saved by the emulator function
+#' @param flat if you want this function to replace further fits provide their region and year here using a vector of the form c("LAM:2020,2025", "IND:2005")
+#' @param plot logical. If TRUE supply curves will be saved to png files
 #' @author David Klein
 #' @seealso \code{\link{emulator}} \code{\link{fill_missing_years}}
 #' @importFrom magclass getNames write.magpie
 #' @export
 
-replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",fitname="replaced-flat") {
+replace_flat_fits <- function(path_to_postfit_Rdata, flat = NULL, plot = FALSE) {
 
-  # path_to_postfit_Rdata="output/emulator/SSP2-26/linear/data_postfit_SSP2-26.Rdata"
-  # emu_path="output/emulator"
-  # fitname="replaced-flat"
-  
   data     <- NULL
   filtered <- NULL
   userfun  <- NULL
+
+  # create subfolder "replaced-flat" within the original data folder
+  path_output <- file.path(dirname(path_to_postfit_Rdata), "replaced-flat")
+  ifelse(!dir.exists(path_output), dir.create(path_output), FALSE)
+ 
+  # extract fitname (expecting that fitname is the name of the directory where the data file is located in)
+  fitname <- basename(dirname(path_to_postfit_Rdata))
+
+  cat("Loading",path_to_postfit_Rdata,"\n")
+  obj <- load(path_to_postfit_Rdata, verbose = TRUE)
   
-  cat("Loading",path_to_postfit_Rdata,".\n")
-  load(path_to_postfit_Rdata)
+  # if provided by the user replace fit coefficients according to users choices
+  # expects vector of strings like "LAM:2010,2020"
+  if (!is.null(flat)) {
+    cat("The following fits were specified by the user and are considered flat in addition to those automatically detected:\n")
+    # separate region from years
+    flat <- strsplit(flat,":",fixed = TRUE)
+    for (line in flat) {
+      region <- line[1]
+      # separate years 
+      year <- as.numeric(unlist(strsplit(line[2],",",fixed = TRUE)))
+      cat(region,":",year,"\n")
+      # set fit flat so it will be replaced
+      fitcoef[region,year,] <- 0.001
+    }
+  }
+
+  # find flat fits
   zero <- fitcoef[,,"b"]<0.01
   
   # Find regions that have only flat fits and set their fitcoefficients to NA for all years.
@@ -42,35 +63,39 @@ replace_flat_fits <- function(path_to_postfit_Rdata,emu_path="output/emulator",f
   n <-sum(!is.na(attributes(fitcoef)$takenfrom))
   cat("Number of fits that are considered flat and have been replaced:",n,"\n")
   
+  cat("The following table shows, for each region and year, for a fit that was classified as flat, the year by whose data it was replaced.\n")
   print(attributes(fitcoef)$takenfrom)
   
   # Save data to files
-  scen     <- getNames(fitcoef,dim = "scenario")
-  path_plots <- file.path(emu_path,scen,fitname)
-  ifelse(!dir.exists(path_plots), dir.create(path_plots), FALSE)
+  scen <- getNames(fitcoef,dim = "scenario")
   
   if (n>0) {
-    f <- file.path(emu_path,scen,fitname,paste0("f30_bioen_price_",scen,"_replaced_flat.cs4r"))
+    regionscode <- ifelse(is.null(attributes(data)$regionscode), "", attributes(data)$regionscode)
+    
+    f <- file.path(path_output,paste0("f30_bioen_price_",scen,"_replaced_flat",regionscode,".cs4r"))
     cat("Writing fit coefficients to textfile",f,".\n")
     write.magpie(fitcoef,file_name = f)
+    
   
-    f <- file.path(emu_path,scen,fitname,paste0("data_postfit_",scen,"_replaced_flat.Rdata"))
+    f <- file.path(path_output,paste0("data_postfit_",scen,"_replaced_flat.Rdata"))
     cat("Saving data to",f,"\n")
-    save(data,filtered,fitcoef,userfun,file = f)
+    save(list=(obj),file = f)
 
-    # Calculate and plot supplycurves
-    cat("Calculating supplycurves.\n")
-    supplycurve_commonY <- calc_supplycurve(data,fitcoef,myform=userfun)
-    supplycurve_indiviY <- calc_supplycurve(data,fitcoef,myform=userfun,ylimit="individual")
+    if (plot) {
+      # Calculate and plot supplycurves
+      cat("Calculating supplycurves.\n")
+      supplycurve_commonY <- calc_supplycurve(data,fitcoef,myform=userfun)
+      supplycurve_indiviY <- calc_supplycurve(data,fitcoef,myform=userfun,ylimit="individual")
+      
+      plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes=NA,emu_path=".",fitname=file.path(fitname,"replaced-flat"),create_pdf=FALSE)
+    }
     
-    plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes=NA,emu_path=emu_path,fitname=fitname,create_pdf=FALSE)
-    
-    logfile <- file.path(emu_path,scen,fitname,paste0("replace-flat-fits-",scen,".log"))
+    logfile <- file.path(path_output,paste0("replace-flat-fits-",scen,".log"))
     
   } else {
     
     cat("Replaced nothing. Stopping here.\n")
-    logfile <- file.path(emu_path,scen,fitname,paste0("nothing-replaced-",scen,".log"))
+    logfile <- file.path(path_output,paste0("nothing-replaced-",scen,".log"))
     
   }
 
