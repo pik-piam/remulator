@@ -74,19 +74,12 @@ You will probably notice that for some regions (usually regions with low biomass
 
 ![Picture: flat fits](scatter-fit-SSP2-NDC-NDC-CAZ.png){width=100%}
 
-For **each scenario** these **flat fits** need to be **adjusted manually**, such that they are either overwritten by values from subsequent years (for example using 2055 values also for 2050), or simply removed (i.e. that there is no potential at all in the respective year for the respective region). This is done with the `replace_flat_fits.R` script (which is part of this package):
+For **each scenario** these **flat fits** need to be **adjusted manually**, such that they are either overwritten by values from subsequent years (for example using 2055 values also for 2050), or simply removed (i.e. that there is no bioenergy potential at all in the respective year for the respective region). This is done with the `replace_flat_fits.R` script which is part of this package. Here is what you do:
 
-* Check for each region, in which time steps the fit functions are too small.	Attention: in the regional .png files (e.g. `scatter-fit-… -CAZ.png`) it is sometimes difficult to see if slopes are really too small, since the scaling of the x- and y-axes are not fixed, so better double check with the plot for the respective year (e.g. `scatter-fit-…-y2045.png`), here the scaling is fixed and the slope can be compared with other regions.
-* If there are no “good years” at all (happens quite often for MEA for example), it might be necessary to set coefficients to `NA` manually (but in most cases, this is not necessary or it was already done automatically). This will result in emulators that don’t allow for any bioenergy production in the respective region.
-*	Collect all the regions and years for which you want to replace the fits in a vector of strings of the form `"LAM:2020,2050"` and pass it to the `replace_flat_fits` function. For all of the listed regions and time steps it copies fits from subsequent years. It creates a subfolder “replaced_flat” within the existing fit folder (usually "linear"), where now all fits should be corrected (you can check the new `scatter-fit-allyears-fixed-….png` if all flat fits were replaced).
-
-Use the code example from below to replace the flat fits. Place the code into a script in the `output/emulator` folder, adapt it to your needs, and run it via `Rscript`.
+* Use the code example from below to replace the flat fits. Place the code into a script in the `output/emulator` folder, adapt it to your needs, and run it via `Rscript`.
 
 ```
 library(remulator)
-
-#set working directory
-setwd("/whateverPath/magpie/output/emulator")
 
 # Provide regions and years of fit coefficients you want to be replaced.
 # replace_flat_fits then automatically copies coefficients from subsequent years
@@ -104,14 +97,18 @@ flat <- c("CAZ:2070",
           paste0("SSA:", paste0(seq(2000, 2025, 5), collapse = ","))
 )
 
-# run the function and let it plot the supply curves into the subfolder "replaced-flat" of the respective fit
+# Run the function and let it plot the supply curves 
+# into the subfolder "replaced-flat" of the respective fit
+
 replace_flat_fits("SSP2-NDC-NDC/linear/data_postfit_SSP2-NDC-NDC.Rdata",
                   flat = flat,
                   plot = TRUE)
 ```
 
-* The `replace_flat_fits.R` script will try to extract the regionscode from the data (the regionscode is saved as an attribute of the `data` object in the `data_postfit_....Rdata` file). If no regionscode is available please add it to the name of the new file (in the `replaced_flat` folder) by copying the region code (e.g. `_690d3718e151be1b450b394c1064b1c5` or the new shorter one) from the filename of the original fits to the end of the filename. E.g.:
-*	`f30_bioen_price_SDP-NDC-PkBudg900_replaced_flat.cs4r` -> `f30_bioen_price_SDP-NDC-PkBudg900_replaced_flat_690d3718e151be1b450b394c1064b1c5.cs4r`
+* Check for each region, in which time steps the slope of the fit functions is too small by comparing it to the fits of other regions and years.	Attention: in the regional .png files (e.g. `scatter-fit-… -CAZ.png`) it is sometimes difficult to see if slopes are really too small, since the scaling of the x- and y-axes are not fixed, so better double check with the plot for the respective year (e.g. `scatter-fit-…-y2045.png`), here the scaling is fixed and the slope can be compared with other regions.
+*	Collect all the regions and years for which you want to replace the fits in a vector of strings (named `flat` in the code example above) of the form `"LAM:2020,2050"` and pass it to the `replace_flat_fits` function. For all of the listed regions and time steps the function copies fits from subsequent years. It creates a subfolder “replaced_flat” within the existing fit folder (usually "linear"), where now all fits should be corrected. You can check the new `scatter-fit-allyears-fixed-….png` if all flat fits were replaced.
+* If there are no “good years” at all (happens quite often for MEA for example), list all years of this region. The `replace_flat_fits` function will set all fit coefficients to `NA` then and the calcBiomassPrice function of mrremind (see next section) will interpret this region to be not compatible at any time. This will result in emulators that don’t allow for any bioenergy production in the respective region.
+* The `replace_flat_fits` function also tries to extract the regionscode from the data (the regionscode is saved as an attribute of the `data` object in the `data_postfit_....Rdata` file). If no regionscode is available please add it to the name of the new file (in the `replaced_flat` folder) by copying the region code (e.g. `_690d3718e151be1b450b394c1064b1c5` or the new shorter one) from the filename of the original fits to the end of the filename. E.g.: `f30_bioen_price_SDP-NDC-PkBudg900_replaced_flat.cs4r` -> `f30_bioen_price_SDP-NDC-PkBudg900_replaced_flat_690d3718e151be1b450b394c1064b1c5.cs4r`
 *	This needs to be checked for every scenario, where flat fits were replaced
 
 
@@ -202,5 +199,5 @@ outfilepath <- "/path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_pri
 write.magpie(out, outfilepath)
 ```
 
-If you check `/path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price.cs4r`, the values for all scenarios and rcps that you replaced should be the same (different between regions, years and coefficients). REMIND will decide which SSP to pick in this file from cm_LU_emi_scen and the RCP from cm_rcp_scen, so be sure that these switches match the SSPs and RCPs you replaced.
+If you check `/path/to/remind/modules/30_biomass/magpie_40/input/f30_bioen_price.cs4r`, the values for all scenarios and rcps that you replaced should be the same (different between regions, years and coefficients). REMIND will decide which SSP to pick in this file from `cm_LU_emi_scen` and the RCP from `cm_rcp_scen`, so be sure that these switches match the SSPs and RCPs you replaced.
 
