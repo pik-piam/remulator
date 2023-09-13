@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it using the metadata from this file.
+type: software
+title: 'remulator: R emulator'
+version: 1.21.0
+date-released: '2023-09-13'
+abstract: A collection of R tools for fitting model results.
+authors:
+- family-names: Klein
+  given-names: David
+  email: dklein@pik-potsdam.de
+license: LGPL-3.0
+repository-code: https://github.com/pik-piam/remulator
+doi: 10.5281/zenodo.2546517
+

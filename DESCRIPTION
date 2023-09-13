@@ -1,25 +1,24 @@
 Package: remulator
 Type: Package
 Title: R emulator
-Version: 1.20.0
-Date: 2022-01-19
+Version: 1.21.0
+Date: 2023-09-13
 Authors@R: c(person("David", "Klein", email = "dklein@pik-potsdam.de", role = c("aut","cre")))
 Description: A collection of R tools for fitting model results. 
 License: LGPL-3 | file LICENSE
 Depends:
     R(>= 2.10.0)
-Imports: magclass(>= 4.40),
-         mip(>= 0.97),
-         lusweave,
-         luplot,
-         ggplot2,
-         magpie4,
-         methods,
-         madrat
+Imports:
+    ggplot2,
+    luplot,
+    lusweave,
+    madrat,
+    magclass(>= 4.40),
+    magpie4,
 URL: https://github.com/pik-piam/remulator, https://doi.org/10.5281/zenodo.2546517
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 Suggests:
     covr,
     knitr,
