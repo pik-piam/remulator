@@ -1,6 +1,6 @@
 # R emulator
 
-R package **remulator**, version **1.21.0**
+R package **remulator**, version **1.21.1**
 
 [![CRAN status](https://www.r-pkg.org/badges/version/remulator)](https://cran.r-project.org/package=remulator) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2546517.svg)](https://doi.org/10.5281/zenodo.2546517) [![R build status](https://github.com/pik-piam/remulator/workflows/check/badge.svg)](https://github.com/pik-piam/remulator/actions) [![codecov](https://codecov.io/gh/pik-piam/remulator/branch/master/graph/badge.svg)](https://app.codecov.io/gh/pik-piam/remulator) [![r-universe](https://pik-piam.r-universe.dev/badges/remulator)](https://pik-piam.r-universe.dev/builds)
 
@@ -47,7 +47,7 @@ In case of questions / problems please contact David Klein <dklein@pik-potsdam.d
 
 To cite package **remulator** in publications use:
 
-Klein D (2023). _remulator: R emulator_. doi:10.5281/zenodo.2546517 <https://doi.org/10.5281/zenodo.2546517>, R package version 1.21.0, <https://github.com/pik-piam/remulator>.
+Klein D (2023). _remulator: R emulator_. doi: 10.5281/zenodo.2546517 (URL: https://doi.org/10.5281/zenodo.2546517), R package version 1.21.1, <URL: https://github.com/pik-piam/remulator>.
 
 A BibTeX entry for LaTeX users is
 
@@ -56,7 +56,7 @@ A BibTeX entry for LaTeX users is
   title = {remulator: R emulator},
   author = {David Klein},
   year = {2023},
-  note = {R package version 1.21.0},
+  note = {R package version 1.21.1},
   doi = {10.5281/zenodo.2546517},
   url = {https://github.com/pik-piam/remulator},
 }

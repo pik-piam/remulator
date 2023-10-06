@@ -15,6 +15,7 @@
 #' @importFrom madrat regionscode
 #' @export
 
+
 read_and_combine <- function(list_of_directories, outfile=NULL) {
   cat("Collecting results.\n")
   mag_res <- NULL
@@ -24,8 +25,7 @@ read_and_combine <- function(list_of_directories, outfile=NULL) {
     cat("Reading data from:",f,"\n")
     # extract scenario name from path: any string between "/" and EOL ($) containing "-x" with x being a one or two digit number
     #scenario <- gsub(".*\\/(.*-[0-9]{1,2}$)","\\1",f)
-    cfg <- NULL
-    load(paste0(f,"/config.Rdata"))
+    cfg <- gms::loadConfig(file.path(f, "config.yml"))
     scenario <- cfg$title
     
     load(paste0(f,"/spatial_header.rda"))
