@@ -85,9 +85,11 @@ plot_compare_supplycurves <- function(folders,pdfname=NULL) {
       cat("Creating figures for ",y," and saving them to folder '",path_comp,"'\n",sep="")
       if (!is.null(pdfname)) swlatex(sw,paste0("\\subsection{",y,"}"))
       dat <- gginput(supplycurves[,y,], scatter = "type",verbose = FALSE)
-      p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + geom_line(aes_string(colour="scenario")) + facet_wrap(~.spat1 ,scales = "fixed") +
-        geom_point(data=gginput(filtered["GLO",,,invert=TRUE][,y,][,,"fitted"],scatter = "variable",verbose = FALSE),aes_string(x=".value.x",y=".value.y",colour="scenario"),size=1) +
-        theme_grey(base_size = 6) + labs(title = y, y ="$/GJ", x = "EJ")
+      p <- ggplot(dat, aes_string(x=".value.x",y=".value.y")) + 
+           geom_line(aes_string(colour="scenario")) + 
+           facet_wrap(~.spat1 ,scales = "fixed") +
+           geom_point(data=gginput(filtered["GLO",,,invert=TRUE][,y,][,,"fitted"],scatter = "variable",verbose = FALSE), aes_string(x=".value.x",y=".value.y",colour="scenario"), size = 0.7, alpha = 0.3) +
+           theme_grey(base_size = 6) + labs(title = y, y ="$/GJ", x = "EJ")
       ggsave(filename = file.path(path_comp,paste0(y,".png")),plot=p,width=10,height=6)
       if (!is.null(pdfname)) swfigure(sw,print,p,fig.width=1)
     }
