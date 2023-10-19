@@ -32,7 +32,7 @@
 emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(2,7),userfun=function(param,x)return(param[[1]] + param[[2]] * x ^param[[3]]),initial_values=c(0,0,1),outlier_range=1.5,n_suff=1,fill=FALSE,output_path="emulator",fitname = "linear",create_pdf=TRUE,...) {
   
   cat("Starting generation of emulator.\n")
-  
+
   ########################################################
   ################ structure data ########################
   ########################################################
@@ -153,14 +153,6 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
   # fitcoef <- fill_missing_years(fitcoef,nofit=(collapseNames(fitcoef[,,"b"],collapsedim="coeff"))==0)
 
   ########################################################
-  ######### calculate supplycurve for plotting ###########
-  ########################################################
-  
-  cat("Calculating supplycurve.\n")
-  supplycurve_commonY <- calc_supplycurve(data,fitcoef,myform=userfun)
-  supplycurve_indiviY <- calc_supplycurve(data,fitcoef,myform=userfun,ylimit="individual")
-  
-  ########################################################
   ######## label data points for scatter plots ###########
   ########################################################
   
@@ -193,6 +185,10 @@ emulator <- function(data,name_x,name_y,name_modelstat=NULL,treat_as_feasible=c(
   ########################################################
   ########### plot supplycurves (png/pdf) ################
   ########################################################
+  
+  cat("Calculating supplycurve.\n")
+  supplycurve_commonY <- calc_supplycurve(data,fitcoef,myform=userfun)
+  supplycurve_indiviY <- calc_supplycurve(data,fitcoef,myform=userfun,ylimit="individual")
   
   cat("Plotting supplycurve.\n")
   plot_curve(filtered[,,"raw",invert=TRUE],supplycurve_commonY,supplycurve_indiviY,infes,output_path,fitname,create_pdf)
