@@ -1,20 +1,21 @@
 #' Replace fits in years where they are flat with fits from other years
 #'
-#' This function considers fits with a slope less than 0.01 flat and tries to
+#' This function considers fits with a slope less than defined in threshold flat and tries to
 #' replace them with non-flat fits from other years.
 #'
-#' @param path_to_postfit_rdata path to the Rdata file that contains raw data,
+#' @param path_to_postfit_rdata Path to the Rdata file that contains raw data,
 #' fitted data and fitcoefficients saved by the emulator function
-#' @param flat if you want this function to replace further fits provide
+#' @param flat If you want this function to replace further fits provide
 #' their region and year here using a vector of the form
 #' c("LAM:2020,2025", "IND:2005")
+#' @param threshold Defines the value of the slope (b) below which fits are considered flat
 #' @param plot logical. If TRUE supply curves will be saved to png files
 #' @author David Klein
 #' @seealso \code{\link{emulator}} \code{\link{fill_missing_years}}
 #' @importFrom magclass getNames write.magpie
 #' @export
 
-replace_flat_fits <- function(path_to_postfit_rdata, flat = NULL, plot = FALSE) {
+replace_flat_fits <- function(path_to_postfit_rdata, flat = NULL, threshold = 0.01, plot = FALSE) {
 
   data     <- NULL
   filtered <- NULL
@@ -29,7 +30,16 @@ replace_flat_fits <- function(path_to_postfit_rdata, flat = NULL, plot = FALSE) 
 
   cat("Loading", path_to_postfit_rdata, "\n")
   obj <- load(path_to_postfit_rdata, verbose = TRUE)
-
+  
+  # Before setting fits flat in the years provided by the user find fits among the original fits that are flat 
+  flatByThreshold <- fitcoef[,,"b"] < threshold
+  
+  # create empty magpie object of the shape of fitcoef[,,"b"]
+  flatByUser <- new.magpie(getRegions(fitcoef),
+                           getYears(fitcoef),
+                           names = getNames(fitcoef[,,"b"]),
+                           fill = FALSE,
+                           sets = getSets(fitcoef))
   # if provided by the user replace fit coefficients according to users choices
   # expects vector of strings like "LAM:2010,2020"
   if (!is.null(flat)) {
@@ -40,14 +50,23 @@ replace_flat_fits <- function(path_to_postfit_rdata, flat = NULL, plot = FALSE) 
       region <- line[1]
       # separate years
       year <- as.numeric(unlist(strsplit(line[2], ",", fixed = TRUE)))
-      cat(region, ":", year, "\n")
+      #cat(region, ":", year, "\n")
       # set fit flat so it will be replaced
-      fitcoef[region, year, ] <- 0.001
+      flatByUser[region, year, ] <- TRUE
     }
   }
+  cat("\nFits listed as flat by the user:\n")
+  print(flatByUser)
 
-  # find flat fits
-  zero <- fitcoef[,,"b"] < 0.01
+  # Inform user about flat fits that were only automaticly detected and not defined by user
+  onlyFlatByThreshold <- flatByThreshold & !flatByUser
+  tmp <- fitcoef[,,"b"]
+  tmp[!onlyFlatByThreshold] <- NA
+  cat("\nFits detected as flat and NOT listed by the user:\n")
+  print(tmp)
+  
+  # flat fits
+  zero <- flatByThreshold | flatByUser
 
   # Find regions that have only flat fits and set their fitcoefficients to NA for all years.
   # All NAs will be replaced by MOINPUT with artificial fits (= high prices)
@@ -60,7 +79,7 @@ replace_flat_fits <- function(path_to_postfit_rdata, flat = NULL, plot = FALSE) 
   }
 
   # replace fitcoefficients for years that have flat fits (b==0)
-  cat("Replacing flat fits.\n")
+  cat("\nReplacing flat fits.\n")
   fitcoef <- fill_missing_years(fitcoef, zero)
 
   # Calculate number of fitcoefficients that have been replaced
@@ -74,7 +93,7 @@ replace_flat_fits <- function(path_to_postfit_rdata, flat = NULL, plot = FALSE) 
   scen <- getNames(fitcoef, dim = "scenario")
 
   if (n > 0) {
-    regionscode <- ifelse(is.null(attributes(data)$regionscode), "", attributes(data)$regionscode)
+    regionscode <- ifelse(is.null(attributes(data)$regionscode), "", paste0("_", attributes(data)$regionscode))
 
     f <- file.path(path_output, paste0("f30_bioen_price_", scen, "_replaced_flat", regionscode, ".cs4r"))
     cat("Writing fit coefficients to textfile", f, ".\n")
