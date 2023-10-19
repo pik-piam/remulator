@@ -4,20 +4,27 @@
 \alias{replace_flat_fits}
 \title{Replace fits in years where they are flat with fits from other years}
 \usage{
-replace_flat_fits(path_to_postfit_rdata, flat = NULL, plot = FALSE)
+replace_flat_fits(
+  path_to_postfit_rdata,
+  flat = NULL,
+  threshold = 0.01,
+  plot = FALSE
+)
 }
 \arguments{
-\item{path_to_postfit_rdata}{path to the Rdata file that contains raw data,
+\item{path_to_postfit_rdata}{Path to the Rdata file that contains raw data,
 fitted data and fitcoefficients saved by the emulator function}
 
-\item{flat}{if you want this function to replace further fits provide
+\item{flat}{If you want this function to replace further fits provide
 their region and year here using a vector of the form
 c("LAM:2020,2025", "IND:2005")}
+
+\item{threshold}{Defines the value of the slope (b) below which fits are considered flat}
 
 \item{plot}{logical. If TRUE supply curves will be saved to png files}
 }
 \description{
-This function considers fits with a slope less than 0.01 flat and tries to
+This function considers fits with a slope less than defined in threshold flat and tries to
 replace them with non-flat fits from other years.
 }
 \seealso{

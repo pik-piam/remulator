@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: If you use this software, please cite it using the metadata from this file.
 type: software
 title: 'remulator: R emulator'
-version: 1.21.1
-date-released: '2023-10-06'
+version: 1.22.0
+date-released: '2023-10-19'
 abstract: A collection of R tools for fitting model results.
 authors:
 - family-names: Klein
